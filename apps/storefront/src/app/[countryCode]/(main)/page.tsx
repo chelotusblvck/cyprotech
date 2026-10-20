@@ -5,6 +5,7 @@ import { getRegion } from "@lib/data/regions"
 import CategoryTiles from "@modules/home/components/category-tiles"
 import FeaturedLatest from "@modules/home/components/featured-latest"
 import Hero from "@modules/home/components/hero"
+import NewsSection from "@modules/home/components/news-section"
 import TrustStrip from "@modules/home/components/trust-strip"
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default async function Home(props: {
       <Hero />
       <TrustStrip />
       <CategoryTiles />
+      <NewsSection />
       <FeaturedLatest region={region} />
     </>
   )

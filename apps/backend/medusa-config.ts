@@ -25,6 +25,24 @@ module.exports = defineConfig({
       resolve: "./src/modules/billing",
     },
     {
+      resolve: "./src/modules/news",
+    },
+    {
+      // Banners de Novedades subidos desde el admin. En producción /app/static va en un volumen.
+      resolve: "@medusajs/medusa/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/file-local",
+            id: "local",
+            options: {
+              backend_url: `${process.env.BACKEND_PUBLIC_URL || "http://localhost:9000"}/static`,
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "@medusajs/medusa/notification",
       options: {
         providers: [

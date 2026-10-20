@@ -41,6 +41,14 @@ export default async function Nav() {
                 </LocalizedClientLink>
               </li>
             ))}
+            <li>
+              <LocalizedClientLink
+                href="/novedades"
+                className="relative py-2 text-ui-fg-subtle transition-colors hover:text-ui-fg-base after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-neon-magenta after:shadow-[0_0_8px_#ff2bd6] after:transition-transform hover:after:scale-x-100"
+              >
+                Novedades
+              </LocalizedClientLink>
+            </li>
           </ul>
 
           <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">

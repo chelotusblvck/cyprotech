@@ -23,7 +23,8 @@ COPY --from=build /repo/apps/backend/.medusa/server ./
 COPY --from=build /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/.npmrc ./
 RUN node -e "const f='package.json',p=require('./'+f);delete p.packageManager;require('fs').writeFileSync(f,JSON.stringify(p,null,2))" && pnpm install --prod --no-frozen-lockfile
 COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh && chown -R node:node /app
+# /app/static guarda los banners subidos desde el admin: se monta como volumen.
+RUN mkdir -p /app/static && chmod +x /usr/local/bin/docker-entrypoint.sh && chown -R node:node /app
 USER node
 EXPOSE 9000
 ENTRYPOINT ["docker-entrypoint.sh"]

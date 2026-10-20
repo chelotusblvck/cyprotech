@@ -28,4 +28,5 @@ Variables: `.env` (raíz, infra) y `apps/backend/.env`, `apps/storefront/.env.lo
 - `docs/DASHBOARD-LEDGER.md` - dashboard de control, ledger de socios y cierre mensual
 - `docs/BOLETA-Y-CORREOS.md` - boleta y factura electrónica (OpenFactura) y correos transaccionales
 - `docs/DESPLIEGUE-COOLIFY.md` - despliegue en el VPS con Coolify, orden de pasos y cuidados
+- `docs/NOVEDADES.md` - carrusel del hero, sección Novedades, importación RSS y cómo cambiar las imágenes
 - `docs/intcomex/` - especificación oficial de la API y notas

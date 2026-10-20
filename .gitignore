@@ -7,3 +7,4 @@ dist
 .medusa
 *.log
 infra/data
+static

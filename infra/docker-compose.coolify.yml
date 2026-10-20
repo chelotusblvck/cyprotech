@@ -99,6 +99,10 @@ services:
       MAIL_FROM: ${MAIL_FROM:-Cyprotech <no-reply@cyprotech.cl>}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL:-contacto@cyprotech.cl}
       ALERT_EMAIL: ${ALERT_EMAIL:-}
+      # Novedades: fuentes RSS (direcciones separadas por coma) para traer borradores. Vacío = solo notas manuales.
+      NEWS_RSS_FEEDS: ${NEWS_RSS_FEEDS:-}
+    volumes:
+      - staticfiles:/app/static
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 15s
@@ -110,3 +114,4 @@ volumes:
   pgdata:
   pgbackups:
   redisdata:
+  staticfiles:

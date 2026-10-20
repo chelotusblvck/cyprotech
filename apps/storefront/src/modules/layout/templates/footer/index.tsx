@@ -84,7 +84,7 @@ export default async function Footer() {
 
         <div className="flex flex-col gap-2 small:flex-row w-full py-8 justify-between border-t border-ui-border-base txt-compact-small text-ui-fg-muted">
           <span>
-            © {new Date().getFullYear()} {BRAND.legalName}. Todos los derechos reservados.
+            © {new Date().getFullYear()} {BRAND.legalName}. Todos los derechos reservados. Los nombres de juegos y marcas pertenecen a sus propietarios.
           </span>
           <span>
             Plataforma desarrollada por{" "}
