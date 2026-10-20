@@ -1,0 +1,112 @@
+# Núcleo de Cyprotech para Coolify: Postgres + Redis + backend Medusa.
+# La tienda (Next.js) va como una aplicación aparte en Coolify: necesita la publishable key,
+# que se crea desde este backend una vez que está en pie. Ver docs/DESPLIEGUE-COOLIFY.md.
+#
+# Todas las variables ${...} se declaran como secretos en la interfaz de Coolify; no hay archivo .env.
+# Los dominios también se asignan en Coolify (servicio backend, puerto 9000). No se publican puertos.
+name: cyprotech
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cyprotech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-cyprotech}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - pgbackups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cyprotech} -d ${POSTGRES_DB:-cyprotech}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  backend:
+    build:
+      context: ..
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    mem_limit: 1g
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "9000"
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=768
+      DATABASE_URL: postgres://${POSTGRES_USER:-cyprotech}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-cyprotech}?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?define JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET:?define COOKIE_SECRET}
+      STORE_CORS: ${STORE_CORS:?define STORE_CORS}
+      ADMIN_CORS: ${ADMIN_CORS:?define ADMIN_CORS}
+      AUTH_CORS: ${AUTH_CORS:?define AUTH_CORS}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:?define BACKEND_PUBLIC_URL}
+      STOREFRONT_URL: ${STOREFRONT_URL:?define STOREFRONT_URL}
+      # Intcomex
+      INTCOMEX_API_KEY: ${INTCOMEX_API_KEY:-}
+      INTCOMEX_ACCESS_KEY: ${INTCOMEX_ACCESS_KEY:-}
+      INTCOMEX_ENV: ${INTCOMEX_ENV:-test}
+      INTCOMEX_LOCALE: ${INTCOMEX_LOCALE:-es}
+      INTCOMEX_MIN_STOCK: ${INTCOMEX_MIN_STOCK:-3}
+      INTCOMEX_AUTO_PLACE_ORDERS: ${INTCOMEX_AUTO_PLACE_ORDERS:-false}
+      INTCOMEX_VERIFY_AT_CHECKOUT: ${INTCOMEX_VERIFY_AT_CHECKOUT:-true}
+      INTCOMEX_SHIPMENT_SERVICE_TYPE: ${INTCOMEX_SHIPMENT_SERVICE_TYPE:-}
+      # Flow
+      FLOW_API_KEY: ${FLOW_API_KEY:-}
+      FLOW_SECRET_KEY: ${FLOW_SECRET_KEY:-}
+      FLOW_ENV: ${FLOW_ENV:-sandbox}
+      FLOW_PAYMENT_METHOD: ${FLOW_PAYMENT_METHOD:-9}
+      FLOW_ORDER_TIMEOUT_SECONDS: ${FLOW_ORDER_TIMEOUT_SECONDS:-7200}
+      # OpenFactura
+      OPENFACTURA_API_KEY: ${OPENFACTURA_API_KEY:-}
+      OPENFACTURA_ENV: ${OPENFACTURA_ENV:-dev}
+      BILLING_EMISOR_RUT: ${BILLING_EMISOR_RUT:-}
+      BILLING_EMISOR_RAZON_SOCIAL: ${BILLING_EMISOR_RAZON_SOCIAL:-}
+      BILLING_EMISOR_GIRO: ${BILLING_EMISOR_GIRO:-}
+      BILLING_EMISOR_ACTECO: ${BILLING_EMISOR_ACTECO:-}
+      BILLING_EMISOR_DIRECCION: ${BILLING_EMISOR_DIRECCION:-}
+      BILLING_EMISOR_COMUNA: ${BILLING_EMISOR_COMUNA:-}
+      BILLING_EMISOR_SUCURSAL: ${BILLING_EMISOR_SUCURSAL:-}
+      BILLING_EMISOR_CORREO: ${BILLING_EMISOR_CORREO:-}
+      BILLING_AUTO_ISSUE: ${BILLING_AUTO_ISSUE:-true}
+      BILLING_AUTO_CREDIT_NOTE: ${BILLING_AUTO_CREDIT_NOTE:-false}
+      # Correo
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-Cyprotech <no-reply@cyprotech.cl>}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-contacto@cyprotech.cl}
+      ALERT_EMAIL: ${ALERT_EMAIL:-}
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+volumes:
+  pgdata:
+  pgbackups:
+  redisdata:
