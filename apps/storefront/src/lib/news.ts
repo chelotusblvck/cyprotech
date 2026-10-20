@@ -31,9 +31,9 @@ export const bannerFor = (post: Pick<NewsPost, "image_url" | "game" | "category"
     return post.image_url
   }
   if (post.game && ART.has(post.game)) {
-    return `/novedades/${post.game}.svg`
+    return `/novedades/${post.game}.jpg`
   }
-  return ART.has(post.category) ? `/novedades/${post.category}.svg` : "/novedades/esports.svg"
+  return ART.has(post.category) ? `/novedades/${post.category}.jpg` : "/novedades/esports.jpg"
 }
 
 export const formatNewsDate = (iso: string | null): string =>

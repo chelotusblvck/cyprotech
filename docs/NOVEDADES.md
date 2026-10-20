@@ -9,16 +9,24 @@
 
 ## Imágenes: estado actual y cómo cambiarlas
 
-Hoy todo el arte es **original y sin marcas** (ilustraciones vectoriales con la ambientación de cada juego), en `apps/storefront/public/hero/` y `public/novedades/`. No se usó arte de Rockstar, EA, Microsoft, Riot ni Blizzard porque no pudimos confirmar que sus kits de prensa permitan usarlo en una tienda:
+Las fotos del hero y de los banners son de **Unsplash** (licencia Unsplash: uso comercial gratuito, sin obligación de atribuir). Se eligieron solo fotos de la biblioteca gratuita, no de Unsplash+ (que es de pago). Quedan en `apps/storefront/public/hero/` y `public/novedades/` (versiones de 2000 y 1400 px, de 130 a 980 KB).
 
-- Riot publica solo logos en su página de prensa, sin condiciones de uso visibles.
-- Para Rockstar, EA, Halo y Blizzard no hay kit público con términos claros.
-- El arte de comunidades de Figma tampoco da derechos sobre el arte original.
+| Uso | Foto (id de Unsplash) | Qué muestra |
+| --- | --- | --- |
+| Marca / Hardware | `1587202372775-e229f172b9d7` | Gabinete con ventiladores azules |
+| GTA | `1551726742-e7fef3db157e` | Calle de ciudad de noche con neón |
+| EA SPORTS FC | `1679391029864-d46f366a456b` | Estadio de fútbol de noche |
+| Halo | `1688407832489-cc9db90773f5` | Nave espacial y planeta |
+| Valorant | `1603481588273-2f908a9a7a1b` | Puesto gamer en tonos rojos |
+| League of Legends | `1696710257827-75e2e5954059` | Puesto gamer morado y azul |
+| Overwatch | `1542751371-adc38448a05e` | Jugador con audífonos en un evento |
+| Esports | `1598550476439-6847785fcea6` | Escritorio con dos monitores y pósters de torneo |
+| Guías | `1660855551740-4474188debdb` | PC con tarjeta de video |
 
-**Si obtienes permiso** (los equipos de prensa responden: p. ej. media@riotgames.com), cambia el arte así:
+Cualquiera se ve en `https://unsplash.com/photos/<id>`. No son arte oficial de los juegos (ni de sus editores): son fotos ambientales que acompañan el texto. No se pudo usar arte oficial porque ningún editor (Rockstar, EA, Microsoft, Riot, Blizzard) publica un kit con condiciones de uso claras para una tienda. Si consigues permiso por escrito, basta con reemplazar el archivo (misma ruta) o apuntar `image` a la nueva en `src/lib/hero-slides.ts`.
 
-- **Hero:** reemplaza el archivo en `public/hero/<juego>.svg` o apunta `image` en `src/lib/hero-slides.ts` a la nueva ruta (ideal 1920 x 860, JPG o WebP de menos de 300 KB). Los textos y enlaces de cada diapositiva se editan en ese mismo archivo.
-- **Novedades:** en el admin, al editar la nota, sube el banner y completa el *crédito de la imagen*, que se muestra sobre la foto.
+- **Hero:** `public/hero/<juego>.jpg`, ideal 1920 x 860, menos de 300 KB si es posible. Los textos y enlaces de cada diapositiva se editan en `src/lib/hero-slides.ts`.
+- **Novedades:** en el admin, al editar la nota, sube el banner y completa el *crédito de la imagen*, que se muestra sobre la foto. Sin banner propio la nota usa la foto del juego o de la categoría.
 
 ## Fuentes y derechos de las notas
 

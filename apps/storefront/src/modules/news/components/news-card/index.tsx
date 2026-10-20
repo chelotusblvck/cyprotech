@@ -13,7 +13,7 @@ export default function NewsCard({ post, flip = false, priority = false }: { pos
           src={bannerFor(post)}
           alt={post.image_alt ?? ""}
           loading={priority ? "eager" : "lazy"}
-          className="absolute inset-0 h-full w-full object-cover object-[72%_50%] transition-transform duration-700 group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
         />
         <div
           className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-vio-950/70 via-transparent to-transparent ${

@@ -27,7 +27,7 @@ export default async function NovedadPage(props: Props) {
     <article>
       <div className="relative h-[320px] small:h-[460px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={bannerFor(post)} alt={post.image_alt ?? ""} className="absolute inset-0 h-full w-full object-cover object-[72%_50%]" />
+        <img src={bannerFor(post)} alt={post.image_alt ?? ""} className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-vio-950 via-vio-950/40 to-transparent" aria-hidden="true" />
         <div className="content-container relative flex h-full flex-col justify-end pb-10">
           <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
