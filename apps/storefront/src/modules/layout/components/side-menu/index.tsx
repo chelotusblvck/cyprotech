@@ -10,22 +10,25 @@ import { Fragment } from "react"
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
+import type { NavCategory } from "@lib/data/categories"
 
 
 const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Account: "/account",
-  Cart: "/cart",
+  Inicio: "/",
+  Tienda: "/store",
+  Novedades: "/novedades",
+  "Mi cuenta": "/account",
+  Carrito: "/cart",
 }
 
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
+  categories?: NavCategory[]
 }
 
-const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
+const SideMenu = ({ regions, locales, currentLocale, categories = [] }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
 
@@ -62,23 +65,57 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                 leaveFrom="opacity-100 backdrop-blur-2xl"
                 leaveTo="opacity-0"
               >
-                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-on-color m-2 backdrop-blur-2xl">
+                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-base m-2 backdrop-blur-2xl">
                   <div
                     data-testid="nav-menu-popup"
-                    className="flex flex-col h-full bg-[rgba(3,7,18,0.5)] rounded-rounded justify-between p-6"
+                    className="flex flex-col h-full overflow-y-auto border border-ui-border-base bg-ui-bg-base/95 rounded-rounded justify-between gap-y-8 p-6"
                   >
                     <div className="flex justify-end" id="xmark">
                       <button data-testid="close-menu-button" onClick={close}>
                         <XMark />
                       </button>
                     </div>
-                    <ul className="flex flex-col gap-6 items-start justify-start">
+                    <ul className="flex flex-col gap-5 items-start justify-start">
+                      {categories.map((category) => (
+                        <li key={category.handle} className="w-full">
+                          <details className="group/acc">
+                            <summary className="flex cursor-pointer list-none items-center justify-between font-display text-2xl uppercase leading-10 hover:text-ui-fg-interactive [&::-webkit-details-marker]:hidden">
+                              {category.name}
+                              <svg className="h-4 w-4 transition-transform group-open/acc:rotate-180" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M2.5 4.5 6 8l3.5-3.5" />
+                              </svg>
+                            </summary>
+                            <ul className="mt-2 flex flex-col gap-1 border-l border-ui-border-base pl-4">
+                              <li>
+                                <LocalizedClientLink
+                                  href={`/categories/${category.handle}`}
+                                  className="block py-1.5 text-base font-semibold text-ui-fg-interactive"
+                                  onClick={close}
+                                >
+                                  Ver todo
+                                </LocalizedClientLink>
+                              </li>
+                              {category.children.map((child) => (
+                                <li key={child.handle}>
+                                  <LocalizedClientLink
+                                    href={`/categories/${child.handle}`}
+                                    className="block py-1.5 text-base text-ui-fg-subtle hover:text-ui-fg-base"
+                                    onClick={close}
+                                  >
+                                    {child.name}
+                                  </LocalizedClientLink>
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        </li>
+                      ))}
                       {Object.entries(SideMenuItems).map(([name, href]) => {
                         return (
                           <li key={name}>
                             <LocalizedClientLink
                               href={href}
-                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                              className="text-xl leading-10 text-ui-fg-subtle hover:text-ui-fg-base"
                               onClick={close}
                               data-testid={`${name.toLowerCase()}-link`}
                             >
@@ -127,8 +164,8 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         />
                       </div>
                       <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Cyprotech. All rights
-                        reserved.
+                        © {new Date().getFullYear()} Cyprotech. Todos los derechos
+                        reservados.
                       </Text>
                     </div>
                   </div>

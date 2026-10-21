@@ -4,8 +4,10 @@ import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
 import { MAIN_CATEGORIES } from "@lib/brand"
+import { listNavCategories } from "@lib/data/categories"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import CategoryMenu from "@modules/layout/components/category-menu"
 import CartButton from "@modules/layout/components/cart-button"
 import Logo from "@modules/layout/components/logo"
 import Search from "@modules/layout/components/search"
@@ -13,10 +15,11 @@ import SideMenu from "@modules/layout/components/side-menu"
 import ThemeToggle from "@modules/layout/components/theme-toggle"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
+  const [regions, locales, currentLocale, categories] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
     getLocale(),
+    listNavCategories(MAIN_CATEGORIES),
   ])
 
   return (
@@ -26,22 +29,13 @@ export default async function Nav() {
         <nav className="content-container flex items-center justify-between w-full h-full text-small-regular text-ui-fg-subtle">
           <div className="flex items-center gap-x-4 flex-1 basis-0 h-full">
             <div className="h-full small:hidden">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} categories={categories} />
             </div>
             <Logo />
           </div>
 
           <ul className="hidden small:flex items-center gap-x-8 font-display text-[15px] font-medium uppercase tracking-wider">
-            {MAIN_CATEGORIES.map((c) => (
-              <li key={c.handle}>
-                <LocalizedClientLink
-                  href={`/categories/${c.handle}`}
-                  className="relative py-2 text-ui-fg-subtle transition-colors hover:text-ui-fg-base after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-neon-magenta after:shadow-[0_0_8px_#ff2bd6] after:transition-transform hover:after:scale-x-100"
-                >
-                  {c.name}
-                </LocalizedClientLink>
-              </li>
-            ))}
+            <CategoryMenu categories={categories} />
             <li>
               <LocalizedClientLink
                 href="/novedades"
