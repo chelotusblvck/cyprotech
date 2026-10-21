@@ -131,6 +131,12 @@ describe("planCatalogSync con el catálogo simulado", () => {
     expect(gpu.publicPrice).toBe(719900)
   })
 
+  it("desactiva lo que Intcomex ya no lista, salvo los productos de carga manual", () => {
+    const rows = [row({ id: "icxp_api", sku: "VIEJO" }), row({ id: "icxp_manual", sku: "100017857", source: "manual" })]
+    const plan = planCatalogSync(catalog, rows, context)
+    expect(plan.toDeactivate.map((r) => r.sku)).toEqual(["VIEJO"])
+  })
+
   it("respeta el límite y no desactiva nada en una corrida parcial", () => {
     const rows = [row({ sku: "VIEJO" })]
     const plan = planCatalogSync(catalog, rows, context, { limit: 5 })

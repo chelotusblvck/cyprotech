@@ -25,6 +25,41 @@ Especificación oficial en `docs/intcomex/` (ver `NOTAS-API.md` y `iws-openapi-e
    Revisar en el admin que precios, categorías y stock sean correctos antes de cargar todo.
 5. Con credenciales reales las sincronizaciones programadas se activan solas.
 
+## Carga manual desde la tienda web (sin acceso a la API)
+
+Mientras no hay credenciales IWS, los productos se cargan a partir de su página en `store.intcomex.com`.
+Se hace en dos pasos, desde `apps/backend`:
+
+1. **Extraer** (usa tu sesión de Chrome; no se guardan credenciales). Una vez, abrir Chrome con un perfil
+   propio e iniciar sesión en la tienda (Chrome no permite depuración remota sobre el perfil por defecto):
+   ```powershell
+   & "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="$env:USERPROFILE\chrome-intcomex"
+   ```
+   Luego, con ese Chrome abierto:
+   ```bash
+   npx ts-node src/scripts/extract-intcomex-urls.ts https://store.intcomex.com/es-XCL/Product/Detail/507131 507132
+   npx ts-node src/scripts/extract-intcomex-urls.ts --file urls.txt --out intcomex-manual.json
+   ```
+   Acepta URLs o ids de producto, una por línea con `--file`. Deja un JSON (`intcomex-manual.json`, ignorado por git);
+   si ya existe, agrega o reemplaza por SKU. Hay una pausa entre páginas (`--delay`, 3000 ms por defecto).
+2. **Importar** (revisar primero con `dry-run`):
+   ```bash
+   npx medusa exec ./src/scripts/import-intcomex-manual.ts dry-run
+   npx medusa exec ./src/scripts/import-intcomex-manual.ts
+   ```
+   Los productos nuevos quedan en **borrador** para revisarlos en el admin; con `publish` se publican los que
+   tengan categoría reconocida y stock suficiente. Las imágenes se descargan y se suben a la tienda
+   (`skip-images` para omitirlas). Volver a importar un SKU existente actualiza costo, precio y stock.
+
+Notas:
+- Los precios de la tienda están en US$ y son netos; entran como costo `USD` y pasan por la fórmula de abajo.
+- Estos productos se marcan `source = manual` en `intcomex_product`: la sincronización por API no los desactiva
+  aunque Intcomex no los liste en su feed. Hay que aplicar la migración (`npx medusa db:migrate`).
+- Sin credenciales el checkout no verifica stock ni costo contra Intcomex, y los pedidos se colocan a mano
+  desde el dashboard. Conviene re-extraer los productos antes de publicar cambios de precio.
+- Si Intcomex cambia el HTML de la página, los selectores están en `EXTRACT_IN_PAGE`
+  (`src/modules/intcomex/manual/normalize.ts`); la interpretación del texto está cubierta por tests.
+
 ## Qué hace
 
 | Pieza | Dónde | Función |

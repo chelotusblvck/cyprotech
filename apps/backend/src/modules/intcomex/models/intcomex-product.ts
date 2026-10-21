@@ -27,6 +27,9 @@ const IntcomexProduct = model
     public_price: model.float().nullable(),
     // Si Intcomex dejó de listar el producto, se marca inactivo en vez de borrarlo.
     active: model.boolean().default(true),
+    // "api" si lo cargó la sincronización con IWS; "manual" si se cargó desde la tienda web. La
+    // sincronización no desactiva los manuales aunque Intcomex no los liste en su feed.
+    source: model.text().default("api"),
     last_synced_at: model.dateTime().nullable(),
   })
   .indexes([

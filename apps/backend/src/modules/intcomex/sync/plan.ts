@@ -23,6 +23,7 @@ export type RowSnapshot = {
   medusa_variant_id: string | null
   inventory_item_id: string | null
   active: boolean
+  source?: string
 }
 
 // Lo que trae Intcomex en cada feed. El catálogo trae todo; precios e inventario, una parte.
@@ -142,6 +143,10 @@ export type NewProductPlan = {
   publicPrice: number
   publishable: boolean
   weightGrams: number | null
+  // Solo en la carga manual: ficha larga, imágenes ya subidas a la tienda y origen del dato.
+  details?: string
+  imageUrls?: string[]
+  source?: "api" | "manual"
 }
 
 export type CatalogPlan = {
@@ -248,7 +253,7 @@ export const planCatalogSync = (
   const toDeactivate =
     options.deactivateMissing === false || options.limit !== undefined
       ? []
-      : rows.filter((row) => row.active && !seen.has(row.sku))
+      : rows.filter((row) => row.active && row.source !== "manual" && !seen.has(row.sku))
 
   return { toCreate, changes, toDeactivate, stats }
 }

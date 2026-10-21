@@ -124,7 +124,7 @@ type Refs = {
   shippingProfileId: string
 }
 
-const loadRefs = async (container: MedusaContainer): Promise<Refs> => {
+export const loadRefs = async (container: MedusaContainer): Promise<Refs> => {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const { data: locations } = await query.graph({ entity: "stock_location", fields: ["id", "name"] })
   const location = locations.find((entry: { name: string }) => entry.name === STOCK_LOCATION_NAME) ?? locations[0]
@@ -145,7 +145,7 @@ const loadRefs = async (container: MedusaContainer): Promise<Refs> => {
   }
 }
 
-const createProducts = async (
+export const createProducts = async (
   container: MedusaContainer,
   service: IntcomexModuleService,
   plans: NewProductPlan[],
@@ -165,8 +165,11 @@ const createProducts = async (
         products: batch.map((plan) => ({
           title: plan.description.slice(0, 250),
           handle: `${slug(plan.description).slice(0, 80)}-${slug(plan.sku)}`,
-          description: plan.description,
+          description: plan.details || plan.description,
           status: plan.publishable ? ("published" as const) : ("draft" as const),
+          ...(plan.imageUrls?.length
+            ? { thumbnail: plan.imageUrls[0], images: plan.imageUrls.map((url) => ({ url })) }
+            : {}),
           shipping_profile_id: refs.shippingProfileId,
           category_ids: plan.categoryHandle && categoryId.get(plan.categoryHandle) ? [categoryId.get(plan.categoryHandle)!] : [],
           sales_channels: [{ id: refs.salesChannelId }],
@@ -241,6 +244,8 @@ const createProducts = async (
           cost_currency: plan.currency,
           stock: plan.stock,
           on_sale: plan.onSale,
+          image_url: plan.imageUrls?.[0] ?? null,
+          source: plan.source ?? "api",
           medusa_product_id: ids?.productId ?? null,
           medusa_variant_id: ids?.variantId ?? null,
           inventory_item_id: (ids && inventoryByVariant.get(ids.variantId)) ?? null,
@@ -254,7 +259,7 @@ const createProducts = async (
   }
 }
 
-const applyChanges = async (
+export const applyChanges = async (
   container: MedusaContainer,
   service: IntcomexModuleService,
   changes: RowChange[],
