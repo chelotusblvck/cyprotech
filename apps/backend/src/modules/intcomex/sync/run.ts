@@ -321,9 +321,21 @@ const deactivate = async (
   stats.deactivated = rows.length
 }
 
+// En producción el catálogo simulado nunca se carga: crearía productos falsos a la venta. Sin credenciales
+// de Intcomex la sincronización se niega (el dashboard muestra el motivo). Fuera de producción, el
+// simulado sirve para probar el ciclo completo.
+export const assertSyncAllowed = (api: IntcomexApi, env: NodeJS.ProcessEnv = process.env) => {
+  if (api.isMock && env.NODE_ENV === "production") {
+    throw new Error(
+      "Intcomex no está configurado en producción (faltan INTCOMEX_API_KEY e INTCOMEX_ACCESS_KEY): no se sincroniza el catálogo simulado.",
+    )
+  }
+}
+
 export const syncCatalog = async (container: MedusaContainer, options: SyncOptions = {}) => {
   const service: IntcomexModuleService = container.resolve(INTCOMEX_MODULE)
   const api = options.api ?? createIntcomexApi()
+  assertSyncAllowed(api)
 
   return withRunLog(service, "catalog", api.isMock, async () => {
     const catalog = await api.getCatalog()
@@ -361,6 +373,7 @@ const syncFeed = async (
 ) => {
   const service: IntcomexModuleService = container.resolve(INTCOMEX_MODULE)
   const api = options.api ?? createIntcomexApi()
+  assertSyncAllowed(api)
 
   return withRunLog(service, kind, api.isMock, async () => {
     const { context, fx } = await buildContext(service)

@@ -4,7 +4,8 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { INTCOMEX_MODULE } from "../../../../modules/intcomex"
 import type IntcomexModuleService from "../../../../modules/intcomex/service"
-import { isSyncRunning, runSync } from "../../../../modules/intcomex/sync/run"
+import { createIntcomexApi } from "../../../../modules/intcomex/client"
+import { assertSyncAllowed, isSyncRunning, runSync } from "../../../../modules/intcomex/sync/run"
 
 const bodySchema = z.object({
   kind: z.enum(["catalog", "prices", "inventory"]),
@@ -23,6 +24,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
   const { kind, limit, dryRun } = parsed.data
   const service: IntcomexModuleService = req.scope.resolve(INTCOMEX_MODULE)
+
+  try {
+    assertSyncAllowed(createIntcomexApi())
+  } catch (error) {
+    res.status(409).json({ message: (error as Error).message })
+    return
+  }
 
   if (await isSyncRunning(service, kind)) {
     res.status(409).json({ message: `Ya hay una sincronización de ${kind} en curso.` })
