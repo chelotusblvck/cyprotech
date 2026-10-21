@@ -6,6 +6,112 @@
 /* ───────────── Cyprotech · tema gamer (violeta + neón) ───────────── */
 :root {
   --cy-ground: #0a0614;
+  --cy-ink: 246 242 255;
+  --cy-glass: rgba(10, 6, 20, 0.72);
+  --cy-glow-a: rgba(124, 58, 237, 0.28);
+  --cy-glow-b: rgba(255, 43, 214, 0.14);
+  --cy-glow-c: rgba(34, 211, 238, 0.08);
+  --cy-scroll-thumb: #5b21b6;
+  --cy-scroll-track: #0a0614;
+  --cy-autofill-bg: #100a20;
+  --cy-autofill-fg: #f6f2ff;
+  --gray-50: 26 18 50;
+  --gray-100: 34 24 66;
+  --gray-200: 52 38 95;
+  --gray-300: 75 58 130;
+  --gray-400: 127 112 176;
+  --gray-500: 156 143 200;
+  --gray-600: 184 172 222;
+  --gray-700: 208 199 236;
+  --gray-800: 230 224 248;
+  --gray-900: 246 242 255;
+  --grey-0: 16 10 32;
+  --grey-5: 26 18 50;
+  --grey-10: 34 24 66;
+  --grey-20: 52 38 95;
+  --grey-30: 75 58 130;
+  --grey-40: 127 112 176;
+  --grey-50: 156 143 200;
+  --grey-60: 184 172 222;
+  --grey-70: 208 199 236;
+  --grey-80: 230 224 248;
+  --grey-90: 246 242 255;
+}
+
+/* Tema claro: mismas marcas (violeta y neón) sobre fondo lavanda; las fotos del hero y los banners siguen oscuras. */
+html.light {
+  color-scheme: light;
+  --cy-ground: #f6f2ff;
+  --cy-ink: 26 18 50;
+  --cy-glass: rgba(255, 255, 255, 0.78);
+  --cy-glow-a: rgba(124, 58, 237, 0.14);
+  --cy-glow-b: rgba(255, 43, 214, 0.07);
+  --cy-glow-c: rgba(34, 211, 238, 0.07);
+  --cy-scroll-thumb: #a78bfa;
+  --cy-scroll-track: #ede4ff;
+  --cy-autofill-bg: #ffffff;
+  --cy-autofill-fg: #1a1232;
+  --gray-50: 246 242 255;
+  --gray-100: 230 224 248;
+  --gray-200: 208 199 236;
+  --gray-300: 184 172 222;
+  --gray-400: 156 143 200;
+  --gray-500: 127 112 176;
+  --gray-600: 75 58 130;
+  --gray-700: 52 38 95;
+  --gray-800: 34 24 66;
+  --gray-900: 26 18 50;
+  --grey-0: 255 255 255;
+  --grey-5: 246 242 255;
+  --grey-10: 230 224 248;
+  --grey-20: 208 199 236;
+  --grey-30: 184 172 222;
+  --grey-40: 156 143 200;
+  --grey-50: 127 112 176;
+  --grey-60: 75 58 130;
+  --grey-70: 52 38 95;
+  --grey-80: 34 24 66;
+  --grey-90: 26 18 50;
+  --bg-base: rgba(255, 255, 255, 1);
+  --bg-base-hover: rgba(243, 236, 255, 1);
+  --bg-base-pressed: rgba(233, 220, 255, 1);
+  --bg-subtle: rgba(246, 242, 255, 1);
+  --bg-subtle-hover: rgba(239, 231, 255, 1);
+  --bg-subtle-pressed: rgba(230, 219, 255, 1);
+  --bg-component: rgba(241, 234, 254, 1);
+  --bg-component-hover: rgba(233, 222, 253, 1);
+  --bg-component-pressed: rgba(223, 208, 251, 1);
+  --bg-field: rgba(124, 58, 237, 0.06);
+  --bg-field-hover: rgba(124, 58, 237, 0.1);
+  --bg-field-component: rgba(255, 255, 255, 1);
+  --bg-field-component-hover: rgba(243, 236, 255, 1);
+  --bg-disabled: rgba(236, 230, 247, 1);
+  --bg-overlay: rgba(22, 10, 51, 0.5);
+  --bg-interactive: rgba(124, 58, 237, 1);
+  --bg-highlight: rgba(237, 228, 255, 1);
+  --bg-highlight-hover: rgba(224, 210, 255, 1);
+  --fg-base: rgba(26, 18, 50, 1);
+  --fg-subtle: rgba(75, 58, 130, 1);
+  --fg-muted: rgba(112, 96, 163, 1);
+  --fg-disabled: rgba(176, 165, 208, 1);
+  --fg-interactive: rgba(109, 40, 217, 1);
+  --fg-interactive-hover: rgba(91, 33, 182, 1);
+  --border-base: rgba(76, 29, 149, 0.16);
+  --border-strong: rgba(76, 29, 149, 0.3);
+  --border-interactive: rgba(124, 58, 237, 1);
+  --border-menu-top: rgba(255, 255, 255, 1);
+  --border-menu-bot: rgba(76, 29, 149, 0.16);
+  --button-inverted: rgba(124, 58, 237, 1);
+  --button-inverted-hover: rgba(109, 40, 217, 1);
+  --button-inverted-pressed: rgba(91, 33, 182, 1);
+  --fg-on-inverted: rgba(255, 255, 255, 1);
+  --button-neutral: rgba(124, 58, 237, 0.08);
+  --button-neutral-hover: rgba(124, 58, 237, 0.14);
+  --button-neutral-pressed: rgba(124, 58, 237, 0.2);
+  --button-transparent-hover: rgba(124, 58, 237, 0.1);
+}
+
+:root {
   --cy-violet: #a855f7;
   --cy-magenta: #ff2bd6;
   --cy-cyan: #22d3ee;
@@ -67,12 +173,12 @@ html {
 
 body {
   background:
-    radial-gradient(1100px 600px at 12% -8%, rgba(124, 58, 237, 0.28), transparent 60%),
-    radial-gradient(900px 560px at 92% 4%, rgba(255, 43, 214, 0.14), transparent 60%),
-    radial-gradient(900px 700px at 50% 110%, rgba(34, 211, 238, 0.08), transparent 60%),
+    radial-gradient(1100px 600px at 12% -8%, var(--cy-glow-a), transparent 60%),
+    radial-gradient(900px 560px at 92% 4%, var(--cy-glow-b), transparent 60%),
+    radial-gradient(900px 700px at 50% 110%, var(--cy-glow-c), transparent 60%),
     var(--cy-ground);
   background-attachment: fixed;
-  color: rgb(246, 242, 255);
+  color: rgb(var(--cy-ink));
   font-family: var(--font-body), Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -87,7 +193,7 @@ h1, h2, h3, .font-display {
 }
 
 * {
-  scrollbar-color: #5b21b6 #0a0614;
+  scrollbar-color: var(--cy-scroll-thumb) var(--cy-scroll-track);
 }
 
 @layer utilities {
@@ -145,7 +251,7 @@ h1, h2, h3, .font-display {
   }
 
   .glass-bar {
-    background: rgba(10, 6, 20, 0.72);
+    background: var(--cy-glass);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
   }
@@ -196,8 +302,8 @@ h1, h2, h3, .font-display {
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
     border: 1px solid #a855f7;
-    -webkit-text-fill-color: #f6f2ff;
-    -webkit-box-shadow: 0 0 0px 1000px #100a20 inset;
+    -webkit-text-fill-color: var(--cy-autofill-fg);
+    -webkit-box-shadow: 0 0 0px 1000px var(--cy-autofill-bg) inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 

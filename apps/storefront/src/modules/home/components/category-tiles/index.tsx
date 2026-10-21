@@ -121,7 +121,7 @@ export default function CategoryTiles() {
                   className="after:absolute after:inset-0"
                 >
                   <h3
-                    className={`font-display font-bold uppercase leading-none ${
+                    className={`font-display font-bold text-white uppercase leading-none ${
                       t.featured ? "text-5xl small:text-6xl" : "text-3xl"
                     }`}
                   >

@@ -10,6 +10,7 @@ import CartButton from "@modules/layout/components/cart-button"
 import Logo from "@modules/layout/components/logo"
 import Search from "@modules/layout/components/search"
 import SideMenu from "@modules/layout/components/side-menu"
+import ThemeToggle from "@modules/layout/components/theme-toggle"
 
 export default async function Nav() {
   const [regions, locales, currentLocale] = await Promise.all([
@@ -75,6 +76,7 @@ export default async function Nav() {
             >
               <CartButton />
             </Suspense>
+            <ThemeToggle />
           </div>
         </nav>
       </header>

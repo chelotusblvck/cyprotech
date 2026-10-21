@@ -26,9 +26,15 @@ export const metadata: Metadata = {
   description: BRAND.description,
 }
 
+// Se ejecuta antes de pintar: si la persona eligió el tema claro, evita el destello del oscuro.
+const THEME_SCRIPT = `try{if(localStorage.getItem("cy-theme")==="light"){var r=document.documentElement;r.classList.remove("dark");r.classList.add("light");r.dataset.mode="light"}}catch(e){}`
+
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`dark ${display.variable} ${body.variable}`} data-mode="dark">
+    <html lang="es" className={`dark ${display.variable} ${body.variable}`} data-mode="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="bg-ui-bg-subtle text-ui-fg-base">
         <main className="relative">{props.children}</main>
       </body>

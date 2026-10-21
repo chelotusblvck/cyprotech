@@ -27,7 +27,7 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
         "relative w-full overflow-hidden p-4 rounded-large border border-ui-border-base transition-all ease-in-out duration-200 group-hover:border-vio-300 group-hover:shadow-[0_0_30px_-6px_rgba(168,85,247,0.7)]",
         initialImage
           ? "bg-gradient-to-b from-[#f7f4ff] to-[#e4d9fa]"
-          : "bg-gradient-to-br from-vio-900/70 via-ui-bg-base to-vio-950",
+          : "bg-gradient-to-br from-vio-200 via-ui-bg-base to-vio-300/60 dark:from-vio-900/70 dark:to-vio-950",
         className,
         {
           "aspect-[1/1]": isFeatured || size === "square" || size === "full",
