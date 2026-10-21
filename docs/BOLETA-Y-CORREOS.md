@@ -24,6 +24,10 @@ Variables en `apps/backend/.env`:
 | `BILLING_AUTO_ISSUE` | `false` desactiva la emisión automática (solo manual desde el dashboard). |
 | `BILLING_AUTO_CREDIT_NOTE` | `true` emite nota de crédito sola al cancelar un pedido. Por defecto es manual. |
 
+**Producción sin API Key:** el sistema no simula. Con `NODE_ENV=production` y sin `OPENFACTURA_API_KEY`, cada emisión falla con un error claro (una sola alerta, sin reintentos automáticos) y el pedido queda con el documento en "Falló". Cuando ya esté la clave se reintenta a mano desde el dashboard. El emisor simulado solo existe en desarrollo.
+
+**Cuándo emitir:** al confirmarse el pago, que es lo que hace el sistema. No dejar la emisión en un lote diario: emitir tarde es infracción. Confirmar con el contador el momento exacto para la factura (pago o despacho).
+
 Pasos: obtener la API Key, completar los datos del emisor, probar con `OPENFACTURA_ENV=dev` (el SII no recibe nada), y recién entonces cambiar a `production`. El dashboard muestra "Real (dev)" o "Real (production)" en el panel *Documentos y correos*.
 
 Validado contra la API de desarrollo de OpenFactura: boleta (39), boleta con RUT, factura (33), nota de crédito (61), idempotencia, estado "Aceptado" y descarga de PDF. Para repetir la validación: `npx medusa exec ./src/scripts/dev-validate-openfactura.ts`.

@@ -42,6 +42,18 @@ describe("configuración", () => {
   })
 })
 
+describe("producción sin API Key", () => {
+  it("no simula: cada operación falla y no se reintenta sola", async () => {
+    const api = createOpenFacturaApi({ NODE_ENV: "production" } as NodeJS.ProcessEnv)
+    expect(api.isMock).toBe(false)
+    const error = await api.getPdf("x").catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(OpenFacturaError)
+    expect((error as OpenFacturaError).retryable).toBe(false)
+    expect((error as OpenFacturaError).message).toMatch(/OPENFACTURA_API_KEY/)
+    await expect(api.emit({} as never, "k")).rejects.toThrow(/no se emite/)
+  })
+})
+
 describe("OpenFacturaClient", () => {
   it("emite con apikey e Idempotency-Key y devuelve folio y token", async () => {
     const fetchMock = jest.fn().mockResolvedValue(json({ TOKEN: "TOK", FOLIO: 109, RESOLUCION: { fecha: "2018-03-26", numero: 0 } }))
