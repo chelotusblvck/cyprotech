@@ -39,7 +39,7 @@ services:
 
   backend:
     build:
-      context: ..
+      context: .
       dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
     mem_limit: 1g

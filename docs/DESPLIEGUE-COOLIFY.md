@@ -21,6 +21,8 @@ Lo que no se pudo probar sin el VPS ni dominio: certificados, dominios reales, e
 | `apps/backend/Dockerfile` | Imagen del backend (build multi-etapa; arranca con `docker-entrypoint.sh`, que migra y luego inicia). |
 | `apps/storefront/Dockerfile` | Imagen de la tienda (Next.js `standalone`). Las `NEXT_PUBLIC_*` entran como build args. |
 | `infra/docker-compose.coolify.yml` | Postgres + Redis + backend, con límites de memoria. Todo `${VAR}` se declara en Coolify. |
+
+> Coolify ejecuta compose con `--project-directory` en la raíz del repo, por eso el `context` del backend es `.` (no `..`). Para probarlo en local usa `docker compose --project-directory . -f infra/docker-compose.coolify.yml build`.
 | `.dockerignore` | Deja fuera `node_modules`, `.env` y builds locales. |
 
 ## Orden de despliegue
