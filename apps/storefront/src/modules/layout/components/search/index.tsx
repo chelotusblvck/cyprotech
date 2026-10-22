@@ -1,6 +1,8 @@
 "use client"
 
 import { MagnifyingGlass } from "@medusajs/icons"
+import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { SearchClient } from "instantsearch.js"
 import {
@@ -14,6 +16,8 @@ import {
 import useSearchSettled from "@lib/hooks/use-search-settled"
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { PRODUCT_INDEX_NAME, searchClient } from "@lib/search-client"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import HitPrice from "@modules/store/components/store-hits/price"
 import { Text } from "@modules/common/components/ui"
 import SearchDrawer from "./drawer"
 import SearchHit, { ProductHit } from "./hit"
@@ -38,6 +42,11 @@ const SearchPanel = ({ onNavigate }: { onNavigate: () => void }) => {
   const { isSettled } = useSearchSettled()
 
   const [inputValue, setInputValue] = useState(query)
+  const [preview, setPreview] = useState<ProductHit | null>(null)
+  const router = useRouter()
+  const { countryCode } = useParams<{ countryCode: string }>()
+
+  const resultsHref = `/store?product%5Bquery%5D=${encodeURIComponent(query.trim())}`
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
@@ -47,7 +56,19 @@ const SearchPanel = ({ onNavigate }: { onNavigate: () => void }) => {
 
   return (
     <>
-      <div className="flex items-center gap-x-3 border-b border-ui-border-base px-4">
+      <form
+        className="flex items-center gap-x-3 border-b border-ui-border-base px-4"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!inputValue.trim()) {
+            return
+          }
+          onNavigate()
+          router.push(
+            `/${countryCode}/store?product%5Bquery%5D=${encodeURIComponent(inputValue.trim())}`
+          )
+        }}
+      >
         <MagnifyingGlass className="shrink-0 text-ui-fg-muted" />
         <input
           type="search"
@@ -62,7 +83,7 @@ const SearchPanel = ({ onNavigate }: { onNavigate: () => void }) => {
           className="txt-medium w-full bg-transparent py-4 text-ui-fg-base outline-none placeholder:text-ui-fg-muted"
           data-testid="search-input"
         />
-      </div>
+      </form>
 
       <div className="flex-1 overflow-y-auto">
         {!hasInput ? (
@@ -85,30 +106,71 @@ const SearchPanel = ({ onNavigate }: { onNavigate: () => void }) => {
             className="px-4 py-6 text-center text-ui-fg-muted"
             data-testid="search-loading"
           >
-            Searching&hellip;
+            Buscando&hellip;
           </Text>
         ) : hasResults ? (
           <ul className="py-2" data-testid="search-results">
             {items.map((hit) => (
-              <SearchHit key={hit.objectID} hit={hit} onNavigate={onNavigate} />
+              <SearchHit
+                key={hit.objectID}
+                hit={hit}
+                onNavigate={onNavigate}
+                onPreview={setPreview}
+              />
             ))}
+            <li className="px-4 pt-2">
+              <LocalizedClientLink
+                href={resultsHref}
+                onClick={onNavigate}
+                className="block rounded-rounded border border-ui-border-base py-2 text-center text-sm font-semibold text-ui-fg-interactive hover:bg-ui-bg-base-hover"
+                data-testid="search-view-all"
+              >
+                Ver todos los resultados
+              </LocalizedClientLink>
+            </li>
           </ul>
         ) : isPending || !query.trim() ? (
           <Text
             className="px-4 py-6 text-center text-ui-fg-muted"
             data-testid="search-loading"
           >
-            Searching&hellip;
+            Buscando&hellip;
           </Text>
         ) : (
           <Text
             className="px-4 py-6 text-center text-ui-fg-subtle"
             data-testid="search-no-results"
           >
-            No products found for &quot;{query}&quot;
+            No encontramos productos para &quot;{query}&quot;
           </Text>
         )}
       </div>
+
+      {preview && hasResults && (
+        <div
+          className="pointer-events-none absolute right-full top-16 mr-3 hidden w-72 overflow-hidden rounded-rounded border border-ui-border-base bg-ui-bg-base shadow-elevation-modal md:block"
+          data-testid="search-preview"
+        >
+          <div className="relative aspect-square bg-white">
+            {preview.thumbnail && (
+              <Image
+                src={preview.thumbnail}
+                alt=""
+                fill
+                sizes="288px"
+                className="object-contain p-3"
+                draggable={false}
+              />
+            )}
+          </div>
+          <div className="flex flex-col gap-y-1 p-4">
+            <Text className="txt-medium text-ui-fg-base line-clamp-3">
+              {preview.title}
+            </Text>
+            <HitPrice hit={preview} currencyCode="clp" />
+          </div>
+        </div>
+      )}
     </>
   )
 }
