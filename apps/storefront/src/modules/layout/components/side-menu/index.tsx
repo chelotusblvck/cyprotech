@@ -88,11 +88,11 @@ const SideMenu = ({ regions, locales, currentLocale, categories = [] }: SideMenu
                             <ul className="mt-2 flex flex-col gap-1 border-l border-ui-border-base pl-4">
                               <li>
                                 <LocalizedClientLink
-                                  href={`/categories/${category.handle}`}
+                                  href="/store"
                                   className="block py-1.5 text-base font-semibold text-ui-fg-interactive"
                                   onClick={close}
                                 >
-                                  Ver todo
+                                  Ver toda la tienda
                                 </LocalizedClientLink>
                               </li>
                               {category.children.map((child) => (
