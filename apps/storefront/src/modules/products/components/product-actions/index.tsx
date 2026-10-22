@@ -1,5 +1,6 @@
 "use client"
 
+import PaymentsByFlow from "@modules/common/components/payments-by-flow"
 import { addToCart } from "@lib/data/cart"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
@@ -182,6 +183,7 @@ export default function ProductActions({
             ? "Sin stock"
             : "Agregar al carrito"}
         </Button>
+        <PaymentsByFlow />
         <MobileActions
           product={product}
           variant={selectedVariant}

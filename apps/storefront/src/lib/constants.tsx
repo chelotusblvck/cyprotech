@@ -30,7 +30,7 @@ export const paymentInfoMap: Record<
     icon: <PayPal />,
   },
   pp_flow_flow: {
-    title: "Flow: tarjetas, débito y transferencia",
+    title: "Pago en línea con Flow",
     icon: <CreditCard />,
   },
   pp_system_default: {

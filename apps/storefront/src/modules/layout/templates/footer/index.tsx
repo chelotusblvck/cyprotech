@@ -4,6 +4,7 @@ import { INFO_PAGES } from "@lib/info-pages"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Logo from "@modules/layout/components/logo"
+import PaymentsByFlow from "@modules/common/components/payments-by-flow"
 
 const linkClass = "hover:text-neon-magenta transition-colors"
 
@@ -103,6 +104,14 @@ export default async function Footer() {
               </ul>
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-ui-border-base py-6">
+          <span className="font-display uppercase tracking-wider text-ui-fg-base text-sm">Medios de pago</span>
+          <PaymentsByFlow />
+          <p className="txt-compact-small text-ui-fg-muted">
+            Los medios de pago disponibles se muestran en la plataforma de Flow al pagar.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2 small:flex-row w-full py-8 justify-between border-t border-ui-border-base txt-compact-small text-ui-fg-muted">
