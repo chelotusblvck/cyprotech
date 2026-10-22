@@ -49,7 +49,7 @@ const SideMenu = ({ regions, locales, currentLocale, categories = [] }: SideMenu
 
               {open && (
                 <div
-                  className="fixed inset-0 z-[50] bg-black/0 pointer-events-auto"
+                  className="fixed inset-0 z-[50] bg-black/60 pointer-events-auto"
                   onClick={close}
                   data-testid="side-menu-backdrop"
                 />
@@ -60,18 +60,18 @@ const SideMenu = ({ regions, locales, currentLocale, categories = [] }: SideMenu
                 as={Fragment}
                 enter="transition ease-out duration-150"
                 enterFrom="opacity-0"
-                enterTo="opacity-100 backdrop-blur-2xl"
+                enterTo="opacity-100"
                 leave="transition ease-in duration-150"
-                leaveFrom="opacity-100 backdrop-blur-2xl"
+                leaveFrom="opacity-100"
                 leaveTo="opacity-0"
               >
-                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-base m-2 backdrop-blur-2xl">
+                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-base m-2">
                   <div
                     data-testid="nav-menu-popup"
-                    className="flex flex-col h-full overflow-y-auto border border-ui-border-base bg-ui-bg-base/95 rounded-rounded justify-between gap-y-8 p-6"
+                    className="flex flex-col h-full overflow-y-auto border border-ui-border-base bg-ui-bg-base shadow-2xl rounded-rounded justify-between gap-y-8 p-6"
                   >
                     <div className="flex justify-end" id="xmark">
-                      <button data-testid="close-menu-button" onClick={close}>
+                      <button data-testid="close-menu-button" onClick={close} aria-label="Cerrar menú" className="p-1">
                         <XMark />
                       </button>
                     </div>
