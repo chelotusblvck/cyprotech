@@ -26,9 +26,10 @@ type SideMenuProps = {
   locales: Locale[] | null
   currentLocale: string | null
   categories?: NavCategory[]
+  showNews?: boolean
 }
 
-const SideMenu = ({ regions, locales, currentLocale, categories = [] }: SideMenuProps) => {
+const SideMenu = ({ regions, locales, currentLocale, categories = [], showNews = true }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
 
@@ -110,7 +111,9 @@ const SideMenu = ({ regions, locales, currentLocale, categories = [] }: SideMenu
                           </details>
                         </li>
                       ))}
-                      {Object.entries(SideMenuItems).map(([name, href]) => {
+                      {Object.entries(SideMenuItems)
+                        .filter(([name]) => showNews || name !== "Novedades")
+                        .map(([name, href]) => {
                         return (
                           <li key={name}>
                             <LocalizedClientLink

@@ -5,6 +5,7 @@ import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
 import { MAIN_CATEGORIES } from "@lib/brand"
 import { listNavCategories } from "@lib/data/categories"
+import { listNews } from "@lib/data/news"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CategoryMenu from "@modules/layout/components/category-menu"
@@ -15,12 +16,15 @@ import SideMenu from "@modules/layout/components/side-menu"
 import ThemeToggle from "@modules/layout/components/theme-toggle"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale, categories] = await Promise.all([
+  const [regions, locales, currentLocale, categories, news] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
     getLocale(),
     listNavCategories(MAIN_CATEGORIES),
+    listNews({ limit: 1 }),
   ])
+  // Sin notas publicadas, Novedades no se ofrece en el menu (la pagina sigue disponible por URL).
+  const showNews = news.count > 0
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -29,13 +33,14 @@ export default async function Nav() {
         <nav className="content-container flex items-center justify-between w-full h-full text-small-regular text-ui-fg-subtle">
           <div className="flex items-center gap-x-3 small:gap-x-4 flex-1 basis-0 min-w-0 h-full">
             <div className="h-full small:hidden">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} categories={categories} />
+              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} categories={categories} showNews={showNews} />
             </div>
             <Logo />
           </div>
 
           <ul className="hidden small:flex items-center gap-x-8 font-display text-[15px] font-medium uppercase tracking-wider">
             <CategoryMenu categories={categories} />
+            {showNews && (
             <li>
               <LocalizedClientLink
                 href="/novedades"
@@ -44,6 +49,7 @@ export default async function Nav() {
                 Novedades
               </LocalizedClientLink>
             </li>
+            )}
           </ul>
 
           <div className="flex items-center gap-x-3 small:gap-x-6 h-full flex-1 basis-0 min-w-0 justify-end">
