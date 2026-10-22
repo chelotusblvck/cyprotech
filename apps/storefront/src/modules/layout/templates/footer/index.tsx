@@ -1,5 +1,5 @@
-import { listCategories } from "@lib/data/categories"
-import { BRAND } from "@lib/brand"
+import { listCategories, listCategoryHandlesWithProducts } from "@lib/data/categories"
+import { BRAND, HIDDEN_CATEGORY_HANDLES } from "@lib/brand"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Logo from "@modules/layout/components/logo"
@@ -7,7 +7,14 @@ import Logo from "@modules/layout/components/logo"
 const linkClass = "hover:text-neon-magenta transition-colors"
 
 export default async function Footer() {
-  const productCategories = await listCategories()
+  const [allCategories, withProducts] = await Promise.all([
+    listCategories(),
+    listCategoryHandlesWithProducts(),
+  ])
+  // Sin categorias internas ni vacias (si no se pudo saber cuales tienen productos, se muestran todas).
+  const productCategories = allCategories?.filter(
+    (c) => !HIDDEN_CATEGORY_HANDLES.includes(c.handle) && (withProducts?.has(c.handle) ?? true)
+  )
 
   return (
     <footer className="relative w-full border-t border-ui-border-base mt-24">

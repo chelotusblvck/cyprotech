@@ -1,6 +1,7 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -27,7 +28,7 @@ export default async function PaginatedProducts({
   sortBy?: SortOptions
   page: number
   collectionId?: string
-  categoryId?: string
+  categoryId?: string | string[]
   productsIds?: string[]
   countryCode: string
   optionValueIds?: OptionValueIds
@@ -41,7 +42,7 @@ export default async function PaginatedProducts({
   }
 
   if (categoryId) {
-    queryParams["category_id"] = [categoryId]
+    queryParams["category_id"] = Array.isArray(categoryId) ? categoryId : [categoryId]
   }
 
   if (productsIds) {
@@ -69,6 +70,17 @@ export default async function PaginatedProducts({
   })
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
+
+  if (!products.length) {
+    return (
+      <div className="flex flex-col items-start gap-y-3 py-12" data-testid="products-empty">
+        <p className="text-ui-fg-subtle">Pronto tendremos productos aquí.</p>
+        <LocalizedClientLink href="/store" className="text-ui-fg-interactive hover:underline">
+          Ver toda la tienda
+        </LocalizedClientLink>
+      </div>
+    )
+  }
 
   return (
     <>
