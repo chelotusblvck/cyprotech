@@ -24,6 +24,7 @@ export type RowSnapshot = {
   inventory_item_id: string | null
   active: boolean
   source?: string
+  image_url?: string | null
 }
 
 // Lo que trae Intcomex en cada feed. El catálogo trae todo; precios e inventario, una parte.

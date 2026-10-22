@@ -27,7 +27,6 @@ const kingston: RawProductPage = {
   imageUrls: [
     "https://store.intcomex.com/images/products/100017857m.jpg?v=1",
     "https://store.intcomex.com/images/products/100017857xl.jpg",
-    "https://store.intcomex.com/images/products/KVR32S22S88-200.jpg",
   ],
 }
 
@@ -74,18 +73,33 @@ describe("urls", () => {
 })
 
 describe("pickImages", () => {
-  it("prefiere la versión grande, sin duplicados y sin imágenes de otros productos", () => {
-    expect(pickImages("100017857", kingston.imageUrls)).toEqual([
-      "https://store.intcomex.com/images/products/100017857xl.jpg",
+  it("con miniatura y versión grande se queda con la grande, sin duplicados", () => {
+    expect(pickImages(kingston.imageUrls)).toEqual(["https://store.intcomex.com/images/products/100017857xl.jpg"])
+  })
+
+  it("respeta los nombres reales: CDN de fabricantes, códigos sin patrón y espacios", () => {
+    expect(
+      pickImages([
+        "https://cdn.cs.1worldsync.com/23/66/2366e5d4.jpg",
+        "https://cdn.cs.1worldsync.com/aa/d7/aad762f0.jpg",
+        "https://cdn.cs.1worldsync.com/23/66/2366e5d4.jpg",
+        "/images/products/m4642.jpg",
+        "https://store.intcomex.com/images/products/100017221 m.jpg",
+      ]),
+    ).toEqual([
+      "https://cdn.cs.1worldsync.com/23/66/2366e5d4.jpg",
+      "https://cdn.cs.1worldsync.com/aa/d7/aad762f0.jpg",
+      "https://store.intcomex.com/images/products/m4642.jpg",
+      "https://store.intcomex.com/images/products/100017221%20m.jpg",
     ])
   })
 
-  it("usa la imagen por defecto del SKU si no encuentra ninguna", () => {
-    expect(pickImages("100017857", [])).toEqual(["https://store.intcomex.com/images/products/100017857xl.jpg"])
+  it("descarta logos de marca e íconos", () => {
+    expect(pickImages(["/es-XCL/Image/Brand", "https://assets-manager.abtasty.com/x/icono_favorito.png"])).toEqual([])
   })
 
-  it("completa rutas relativas", () => {
-    expect(pickImages("1", ["/images/products/1m.png"])).toEqual(["https://store.intcomex.com/images/products/1xl.png"])
+  it("sin imágenes devuelve una lista vacía: no se inventan nombres de archivo", () => {
+    expect(pickImages([])).toEqual([])
   })
 })
 

@@ -100,22 +100,26 @@ const buildCategory = (breadcrumb: RawBreadcrumbLink[]): IwsCategory | undefined
   )
 }
 
-// Las miniaturas terminan en "m" y las grandes en "xl": se prefiere siempre la grande.
-export const pickImages = (sku: string, candidates: string[], origin = STORE_ORIGIN): string[] => {
-  const wanted = sku.toLowerCase()
-  const seen = new Set<string>()
+// Imágenes de la galería del producto, tal como las muestra la página: unas vienen del CDN de contenido
+// de fabricantes y otras de /images/products/ con nombres sin patrón, así que no se adivinan. Si la tienda
+// ofrece la miniatura ("...m.jpg") y la versión grande ("...xl.jpg"), se queda solo la grande.
+export const pickImages = (candidates: string[], origin = STORE_ORIGIN): string[] => {
+  const urls: string[] = []
   for (const candidate of candidates) {
-    const clean = candidate.split("?")[0]
-    const file = clean.split("/").pop() ?? ""
-    if (!file.toLowerCase().startsWith(wanted)) {
+    const clean = candidate.split("?")[0].trim()
+    if (!clean || /\/Image\/Brand|assets-manager|icono_/i.test(clean)) {
       continue
     }
-    seen.add(clean.replace(/(?<=\d)m(\.\w+)$/i, "xl$1"))
+    const absolute = /^https?:\/\//i.test(clean) ? clean : `${origin}${clean.startsWith("/") ? "" : "/"}${clean}`
+    const encoded = absolute.replace(/ /g, "%20")
+    if (!urls.includes(encoded)) {
+      urls.push(encoded)
+    }
   }
-  if (seen.size === 0) {
-    seen.add(`${origin}/images/products/${sku}xl.jpg`)
-  }
-  return [...seen].map((url) => (url.startsWith("http") ? url : `${origin}${url}`))
+  return urls.filter((url) => {
+    const large = url.replace(/m(\.\w+)$/i, "xl$1")
+    return large === url || !urls.includes(large)
+  })
 }
 
 export class ExtractionError extends Error {}
@@ -154,7 +158,7 @@ export const normalizeProductPage = (raw: RawProductPage): ManualProduct => {
   return {
     sourceUrl: raw.url,
     details,
-    imageUrls: pickImages(sku, raw.imageUrls),
+    imageUrls: pickImages(raw.imageUrls),
     product: {
       Sku: sku,
       Mpn: mpn ?? undefined,
@@ -179,9 +183,17 @@ export const EXTRACT_IN_PAGE = `(productId) => {
   const price = document.querySelector('.linkArea .font-price') || document.querySelector('.font-price')
   const stock = document.querySelector('.js-product-item-stock-' + productId)
   const description = document.querySelector('#tabs-1')
+  // Imagen principal y galería de ESTE producto (los relacionados usan otras clases). Se resuelven a URL absoluta.
+  const root = box && box.parentElement && box.parentElement.parentElement ? box.parentElement.parentElement : document
   const urls = []
-  for (const el of document.querySelectorAll('img[src*="/images/products/"], a[href*="/images/products/"]')) {
-    urls.push(el.getAttribute('src') || el.getAttribute('href'))
+  for (const el of root.querySelectorAll('img.img-products, img.img-thumb')) {
+    urls.push(new URL(el.getAttribute('src'), location.href).href)
+  }
+  for (const el of document.querySelectorAll('img.mainImageBig, img.img-thumb-big')) {
+    urls.push(new URL(el.getAttribute('src'), location.href).href)
+  }
+  for (const el of root.querySelectorAll('a[href*="/images/products/"]')) {
+    urls.push(new URL(el.getAttribute('href'), location.href).href)
   }
   return {
     url: location.href.split('#')[0],
