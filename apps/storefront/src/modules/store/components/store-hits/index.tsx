@@ -1,5 +1,6 @@
 "use client"
 
+import { formatTitle } from "@lib/util/format-title"
 import type { Hit } from "instantsearch.js"
 import { useEffect, useRef } from "react"
 import { useHits, useInstantSearch } from "react-instantsearch"
@@ -90,7 +91,7 @@ const StoreHits = ({ hitsPerPage, currencyCode }: StoreHitsProps) => {
                         className="text-ui-fg-subtle"
                         data-testid="product-title"
                       >
-                        {hit.title}
+                        {formatTitle(hit.title)}
                       </Text>
                       <HitPrice hit={hit} currencyCode={currencyCode} />
                     </div>

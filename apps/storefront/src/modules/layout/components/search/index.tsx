@@ -13,6 +13,7 @@ import {
   useSearchBox,
 } from "react-instantsearch"
 
+import { formatTitle } from "@lib/util/format-title"
 import useSearchSettled from "@lib/hooks/use-search-settled"
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { PRODUCT_INDEX_NAME, searchClient } from "@lib/search-client"
@@ -165,7 +166,7 @@ const SearchPanel = ({ onNavigate }: { onNavigate: () => void }) => {
           </div>
           <div className="flex flex-col gap-y-1 p-4">
             <Text className="txt-medium text-ui-fg-base line-clamp-3">
-              {preview.title}
+              {formatTitle(preview.title)}
             </Text>
             <HitPrice hit={preview} currencyCode="clp" />
           </div>

@@ -3,6 +3,7 @@
 import Image from "next/image"
 import type { Hit as HitType } from "instantsearch.js"
 
+import { formatTitle } from "@lib/util/format-title"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
 import HitPrice from "@modules/store/components/store-hits/price"
@@ -51,7 +52,7 @@ const SearchHit = ({ hit, onNavigate, onPreview }: SearchHitProps) => {
         </div>
         <div className="min-w-0">
           <Text className="txt-medium text-ui-fg-base line-clamp-2">
-            {hit.title}
+            {formatTitle(hit.title)}
           </Text>
           <HitPrice hit={hit} currencyCode="clp" />
         </div>

@@ -1,3 +1,4 @@
+import { formatTitle } from "@lib/util/format-title"
 import { Text } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
@@ -38,7 +39,7 @@ export default async function ProductPreview({
         />
         <div className="flex flex-col gap-1 txt-compact-medium mt-4">
           <Text className="text-ui-fg-base line-clamp-2 group-hover:text-neon-magenta transition-colors" data-testid="product-title">
-            {product.title}
+            {formatTitle(product.title)}
           </Text>
           <div className="flex items-center gap-x-2">
             {cheapestPrice && <PreviewPrice price={cheapestPrice} />}

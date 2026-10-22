@@ -1,4 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
+import { formatTitle } from "@lib/util/format-title"
 import { Heading } from "@modules/common/components/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -45,7 +46,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
           className="text-3xl leading-10 text-ui-fg-base"
           data-testid="product-title"
         >
-          {product.title}
+          {formatTitle(product.title)}
         </Heading>
 
         <div
