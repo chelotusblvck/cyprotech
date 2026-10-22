@@ -1,5 +1,6 @@
 import { listCategories, listCategoryHandlesWithProducts } from "@lib/data/categories"
 import { BRAND, HIDDEN_CATEGORY_HANDLES } from "@lib/brand"
+import { INFO_PAGES } from "@lib/info-pages"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Logo from "@modules/layout/components/logo"
@@ -28,7 +29,7 @@ export default async function Footer() {
             </p>
           </div>
 
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
+          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-4">
             {productCategories && productCategories.length > 0 && (
               <div className="flex flex-col gap-y-3">
                 <span className="font-display uppercase tracking-wider text-ui-fg-base">
@@ -52,6 +53,21 @@ export default async function Footer() {
                 </ul>
               </div>
             )}
+
+            <div className="flex flex-col gap-y-3">
+              <span className="font-display uppercase tracking-wider text-ui-fg-base">
+                Ayuda
+              </span>
+              <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small" data-testid="footer-help">
+                {INFO_PAGES.map((page) => (
+                  <li key={page.slug}>
+                    <LocalizedClientLink className={linkClass} href={`/${page.slug}`}>
+                      {page.title}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             <div className="flex flex-col gap-y-3">
               <span className="font-display uppercase tracking-wider text-ui-fg-base">
