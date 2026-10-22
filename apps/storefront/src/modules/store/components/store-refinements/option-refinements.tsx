@@ -47,7 +47,12 @@ function groupItems(
     })
   }
 
-  return Array.from(groups.values())
+  // Un grupo con una sola opcion (p. ej. Modelo: Unico) no deja elegir nada: se oculta,
+  // salvo que esa opcion ya este aplicada y el cliente necesite poder quitarla.
+  return Array.from(groups.values()).filter(
+    (group) =>
+      group.values.length > 1 || group.values.some((value) => value.isRefined)
+  )
 }
 
 const OptionRefinements = () => {
