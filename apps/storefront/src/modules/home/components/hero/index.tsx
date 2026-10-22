@@ -58,7 +58,7 @@ const Hero = () => {
         }
       }}
     >
-      <div className="relative min-h-[620px] small:min-h-[78vh]">
+      <div className="relative min-h-[760px] small:min-h-[78vh]">
         {HERO_SLIDES.map((slide, i) => {
           const active = i === index
           return (
@@ -81,7 +81,7 @@ const Hero = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-vio-950 via-vio-950/75 to-vio-950/10 small:via-vio-950/55" aria-hidden="true" />
               <div className="absolute inset-0 bg-gradient-to-t from-vio-950/80 via-transparent to-transparent" aria-hidden="true" />
 
-              <div className="content-container relative flex h-full min-h-[620px] items-center py-20 small:min-h-[78vh]">
+              <div className="content-container relative flex h-full min-h-[760px] items-center pb-28 pt-16 small:min-h-[78vh] small:py-20">
                 <div className={`max-w-2xl ${active ? "animate-rise-in" : ""}`}>
                   <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-vio-950/60 px-4 py-1.5 text-sm text-white/85 backdrop-blur-sm">
                     <span className="h-2 w-2 rounded-full bg-neon-lime shadow-[0_0_10px_#a3ff12] animate-glow-pulse" />
@@ -128,7 +128,7 @@ const Hero = () => {
           &rarr;
         </button>
 
-        <div className="absolute inset-x-0 bottom-20 z-20 flex items-center justify-center gap-2.5">
+        <div className="absolute inset-x-0 bottom-8 small:bottom-20 z-20 flex items-center justify-center gap-2.5">
           {HERO_SLIDES.map((slide, i) => (
             <button
               key={slide.id}
