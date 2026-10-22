@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs"
 import type { ExecArgs, MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
-import { uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
+import { createProductCategoriesWorkflow, uploadFilesWorkflow } from "@medusajs/medusa/core-flows"
 
+import { DETAIL_CATEGORY } from "../modules/intcomex/category-map"
 import { INTCOMEX_MODULE } from "../modules/intcomex"
 import type { ManualProduct } from "../modules/intcomex/manual/normalize"
 import type IntcomexModuleService from "../modules/intcomex/service"
@@ -66,6 +67,23 @@ const uploadImages = async (
   return result.map((file) => file.url)
 }
 
+// Categoría interna para liquidaciones y productos con empaque dañado: queda fuera del menú y del pie de la tienda.
+const ensureDetailCategory = async (container: MedusaContainer) => {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({
+    entity: "product_category",
+    fields: ["id"],
+    filters: { handle: DETAIL_CATEGORY.handle },
+  })
+  if (data.length === 0) {
+    await createProductCategoriesWorkflow(container).run({
+      input: {
+        product_categories: [{ name: DETAIL_CATEGORY.name, handle: DETAIL_CATEGORY.handle, is_active: true, is_internal: true }],
+      },
+    })
+  }
+}
+
 export default async function importIntcomexManual({ container, args = [] }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const service: IntcomexModuleService = container.resolve(INTCOMEX_MODULE)
@@ -108,6 +126,8 @@ export default async function importIntcomexManual({ container, args = [] }: Exe
     }
   })
 
+  const needsDetailCategory = toCreate.some((item) => item.categoryHandle === DETAIL_CATEGORY.handle)
+
   logger.info(
     `${file}: ${entries.length} productos -> ${toCreate.length} nuevos, ${plan.changes.length} a actualizar, ${plan.stats.unchanged} sin cambios. ` +
       `USD/CLP: ${fx?.rate ?? "sin tipo de cambio"}.`,
@@ -125,11 +145,17 @@ export default async function importIntcomexManual({ container, args = [] }: Exe
   for (const change of plan.changes) {
     logger.info(`  ~ ${change.sku} ${JSON.stringify(change.patch)}`)
   }
+  if (needsDetailCategory) {
+    logger.info(`Se usará la categoría interna "${DETAIL_CATEGORY.name}" (se crea si no existe; no aparece en el menú de la tienda).`)
+  }
   if (dryRun) {
     logger.info("dry-run: no se escribió nada.")
     return
   }
 
+  if (needsDetailCategory) {
+    await ensureDetailCategory(container)
+  }
   const stats: Record<string, number | string | boolean> = {}
   if (toCreate.length) {
     if (!skipImages) {

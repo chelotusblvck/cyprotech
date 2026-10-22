@@ -1,4 +1,4 @@
-import { mapCategory } from "../category-map"
+import { DETAIL_CATEGORY, hasPackagingDefect, mapCategory } from "../category-map"
 import { MockIntcomexClient } from "../client/mock"
 import type { IwsProduct } from "../client/types"
 
@@ -27,6 +27,28 @@ describe("mapCategory", () => {
     ["Accesorios", "Soporte de pared para monitor", "accesorios"],
   ])("%s / %s -> %s", (category, description, expected) => {
     expect(mapCategory(product(category, description))).toBe(expected)
+  })
+
+  it.each([
+    ["Mouse Pads y Wrist Pads", "Logitech Mousepad Gamer G840 XL Negro"],
+    ["Ratones", "Primus Gaming Mouse - PGLC Mouse pad con carga inalambrica"],
+    ["Mouse Pads y Wrist Pads", "HyperX Pulsefire Mat Mouse pad - gaming - extra large"],
+  ])("un mouse pad va a accesorios aunque sea gamer: %s / %s", (category, description) => {
+    expect(mapCategory(product(category, description))).toBe("accesorios")
+  })
+
+  it("los SKU de liquidación (-B1) van a la categoría aparte, sea cual sea el producto", () => {
+    const base = product("Cajas / Gabinetes", "Xtech Phobos ATX Mid Tower Case Gamer")
+    expect(mapCategory({ ...base, Sku: "CS515XTK04" })).toBe("gabinetes")
+    expect(mapCategory({ ...base, Sku: "CS515XTK04-B1" })).toBe(DETAIL_CATEGORY.handle)
+    expect(mapCategory({ ...base, Sku: "MT862SAM91-b2" })).toBe(DETAIL_CATEGORY.handle)
+  })
+
+  it("hasPackagingDefect solo mira el sufijo -B<n>", () => {
+    expect(hasPackagingDefect("CP992AMD29-B1")).toBe(true)
+    expect(hasPackagingDefect("CP992AMD29")).toBe(false)
+    expect(hasPackagingDefect("B1-100017857")).toBe(false)
+    expect(hasPackagingDefect("DH120KNG65")).toBe(false)
   })
 
   it("usa la descripción cuando la categoría no dice nada", () => {

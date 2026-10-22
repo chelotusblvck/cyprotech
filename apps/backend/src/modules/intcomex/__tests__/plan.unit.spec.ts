@@ -50,6 +50,10 @@ describe("isPublishable", () => {
     expect(isPublishable("mouse", 2, 3)).toBe(false)
     expect(isPublishable(null, 50, 3)).toBe(false)
   })
+
+  it("nunca publica productos con detalles, aunque tengan stock", () => {
+    expect(isPublishable("productos-con-detalles", 50, 3)).toBe(false)
+  })
 })
 
 describe("planRowChange", () => {

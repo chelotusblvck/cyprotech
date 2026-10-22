@@ -1,5 +1,5 @@
 import { calculatePrice, normalizeCurrency, type PricingConfig } from "../../../lib/pricing"
-import { mapCategory, categoryPath } from "../category-map"
+import { DETAIL_CATEGORY, mapCategory, categoryPath } from "../category-map"
 import type { IwsProduct } from "../client/types"
 
 export type SyncContext = {
@@ -56,8 +56,9 @@ export const totalStock = (product: IwsProduct) =>
   product.InStock ??
   (product.Locations ?? []).reduce((sum, location) => sum + (location.Stock ?? 0), 0)
 
+// Los productos con detalles (liquidación, empaque dañado) nunca se publican solos: se revisan a mano.
 export const isPublishable = (handle: string | null, stock: number, minStock: number) =>
-  handle !== null && stock >= minStock
+  handle !== null && handle !== DETAIL_CATEGORY.handle && stock >= minStock
 
 // Subir de precio siempre se aplica (protege el margen); bajar solo si el cambio es relevante.
 export const shouldUpdatePrice = (current: number | null, next: number, minDropPercent = 0.5) => {

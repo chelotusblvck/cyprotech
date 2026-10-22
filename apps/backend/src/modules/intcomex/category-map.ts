@@ -44,7 +44,15 @@ const RULES: Rule[] = [
   { handle: "accesorios", test: /accesorio|webcam|camara web|\bhub\b|adaptador|pendrive|soporte|\busb\b/ },
 ]
 
-const GAMER_WORDS = /gamer|gaming|rgb|mecanico|mechanical/
+// Intcomex vende con sufijo -B1 (B2, ...) los productos en liquidación con empaque dañado. No se mezclan
+// con los nuevos: van a una categoría interna (no aparece en el menú) para revisarlos aparte.
+export const DETAIL_CATEGORY = { handle: "productos-con-detalles", name: "Productos con detalles" }
+
+export const hasPackagingDefect = (sku: string) => /-B\d$/i.test(sku)
+
+const MOUSE_PAD = /mouse ?pad|mousepad/
+
+const GAMER_WORDS =/gamer|gaming|rgb|mecanico|mechanical/
 const HIGH_REFRESH = /(144|165|180|240|360) ?hz/
 
 const strip = (value: string) =>
@@ -65,6 +73,9 @@ export const categoryPath = (product: IwsProduct) => flatten(product.Category).j
 const firstMatch = (haystack: string) => RULES.find((rule) => rule.test.test(haystack))?.handle ?? null
 
 export const mapCategory = (product: IwsProduct): string | null => {
+  if (hasPackagingDefect(product.Sku)) {
+    return DETAIL_CATEGORY.handle
+  }
   const categoryText = strip(flatten(product.Category).join(" "))
   const description = strip(product.Description ?? "")
 
@@ -75,6 +86,10 @@ export const mapCategory = (product: IwsProduct): string | null => {
   }
 
   const text = `${categoryText} ${description}`
+  // Un mouse pad no es un mouse, aunque sea gamer.
+  if (base === "mouse" && MOUSE_PAD.test(text)) {
+    return "accesorios"
+  }
   const isGamer = GAMER_WORDS.test(text)
 
   switch (base) {
