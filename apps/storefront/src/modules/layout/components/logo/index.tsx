@@ -10,7 +10,7 @@ export default function Logo({ className = "" }: { className?: string }) {
     >
       <svg
         viewBox="0 0 32 32"
-        className="h-8 w-8 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] transition-transform duration-300 group-hover:rotate-[30deg]"
+        className="h-7 w-7 small:h-8 small:w-8 shrink-0 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)] transition-transform duration-300 group-hover:rotate-[30deg]"
         aria-hidden="true"
       >
         <defs>
@@ -35,7 +35,7 @@ export default function Logo({ className = "" }: { className?: string }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="font-display text-xl font-bold uppercase tracking-[0.14em] text-ui-fg-base">
+      <span className="font-display text-lg small:text-xl font-bold uppercase tracking-[0.1em] small:tracking-[0.14em] text-ui-fg-base">
         Cypro<span className="text-rgb">tech</span>
       </span>
     </LocalizedClientLink>

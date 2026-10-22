@@ -27,7 +27,7 @@ export default async function Nav() {
       <div className="h-[2px] w-full bg-[image:var(--cy-rgb)] bg-[length:200%_100%] animate-rgb-shift" />
       <header className="relative h-16 mx-auto border-b border-ui-border-base glass-bar">
         <nav className="content-container flex items-center justify-between w-full h-full text-small-regular text-ui-fg-subtle">
-          <div className="flex items-center gap-x-4 flex-1 basis-0 h-full">
+          <div className="flex items-center gap-x-3 small:gap-x-4 flex-1 basis-0 min-w-0 h-full">
             <div className="h-full small:hidden">
               <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} categories={categories} />
             </div>
@@ -46,7 +46,7 @@ export default async function Nav() {
             </li>
           </ul>
 
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
+          <div className="flex items-center gap-x-3 small:gap-x-6 h-full flex-1 basis-0 min-w-0 justify-end">
             <Search />
             <div className="hidden small:flex items-center gap-x-6 h-full">
               <LocalizedClientLink
@@ -60,8 +60,9 @@ export default async function Nav() {
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2"
+                  className="hover:text-ui-fg-base flex gap-2 whitespace-nowrap"
                   href="/cart"
+                  aria-label="Carrito"
                   data-testid="nav-cart-link"
                 >
                   Carrito (0)
