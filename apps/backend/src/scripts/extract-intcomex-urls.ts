@@ -90,7 +90,8 @@ async function main() {
           const loggedOut = /login|logon|account\/(sign|log)/i.test(page.url())
           throw new ExtractionError(loggedOut ?"La sesión no está iniciada en este Chrome." : "No apareció el producto en la página.")
         }
-        const raw = (await page.evaluate(EXTRACT_IN_PAGE, productId)) as RawProductPage
+        // Con un string, Playwright evalúa la expresión tal cual (no invoca la función): se invoca aquí.
+        const raw = (await page.evaluate(`(${EXTRACT_IN_PAGE})(${JSON.stringify(productId)})`)) as RawProductPage
         const product = normalizeProductPage(raw)
         results.set(product.product.Sku, product)
         const price = product.product.Price
