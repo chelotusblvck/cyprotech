@@ -21,6 +21,7 @@ const PRODUCT_GRAPH_FIELDS = [
   "sales_channels.id",
   "categories.name",
   "tags.value",
+  "metadata",
   "options.title",
   "options.values.value",
 ];
@@ -37,6 +38,7 @@ type ProductRow = {
   sales_channels?: ({ id?: string | null } | null)[] | null;
   categories?: ({ name?: string | null } | null)[] | null;
   tags?: ({ value?: string | null } | null)[] | null;
+  metadata?: Record<string, unknown> | null;
   options?: ProductOptionRow[] | null;
 };
 
@@ -53,6 +55,8 @@ const productFields = search.define({
   created_at: search.date().sortable().retrievable(),
   category: search.keyword().array().filterable().facetable().retrievable(),
   labels: search.keyword().array().filterable().facetable().retrievable(),
+  // Marca canonica (ver lib/catalog/brands.ts); alimenta el filtro "Marca" de la tienda.
+  brand: search.keyword().filterable().facetable().retrievable(),
   option_values: search
     .keyword()
     .array()
@@ -92,6 +96,7 @@ function toDocument(
     created_at: product.created_at ?? null,
     category,
     labels,
+    brand: typeof product.metadata?.brand === "string" && product.metadata.brand.trim() ? product.metadata.brand.trim() : null,
     option_values: toOptionValues(product.options),
     ...toProductPricing(pricing),
   };
