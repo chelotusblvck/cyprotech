@@ -1,6 +1,7 @@
 "use client"
 
 import PaymentsByFlow from "@modules/common/components/payments-by-flow"
+import TransferDiscountNote from "@modules/common/components/transfer-discount-note"
 import { addToCart } from "@lib/data/cart"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
@@ -183,6 +184,10 @@ export default function ProductActions({
             ? "Sin stock"
             : "Agregar al carrito"}
         </Button>
+        <TransferDiscountNote
+          amount={selectedVariant?.calculated_price?.calculated_amount}
+          currencyCode={selectedVariant?.calculated_price?.currency_code}
+        />
         <PaymentsByFlow />
         <MobileActions
           product={product}

@@ -33,6 +33,10 @@ export const paymentInfoMap: Record<
     title: "Pago en línea con Flow",
     icon: <CreditCard />,
   },
+  pp_transfer_transfer: {
+    title: "Transferencia bancaria",
+    icon: <CreditCard />,
+  },
   pp_system_default: {
     title: "Pago manual",
     icon: <CreditCard />,
@@ -53,6 +57,17 @@ export const isPaypal = (providerId?: string) => {
 export const isFlow = (providerId?: string) => {
   return providerId?.startsWith("pp_flow")
 }
+export const isTransfer = (providerId?: string) => {
+  return providerId === "pp_transfer_transfer"
+}
+
+// Codigo de la promocion que el backend crea con setup-transfer (descuento al pagar por transferencia).
+export const TRANSFER_PROMO_CODE = "TRANSFERENCIA"
+// Solo para mostrar; el descuento real lo define el backend (TRANSFER_DISCOUNT_PERCENT).
+export const TRANSFER_DISCOUNT_PERCENT = Number(
+  process.env.NEXT_PUBLIC_TRANSFER_DISCOUNT_PERCENT ?? "2.5"
+)
+
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }

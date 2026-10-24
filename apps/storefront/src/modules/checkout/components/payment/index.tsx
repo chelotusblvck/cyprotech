@@ -1,7 +1,14 @@
 "use client"
 import { RadioGroup } from "@headlessui/react"
-import { isFlow, isStripeLike, paymentInfoMap } from "@lib/constants"
-import { initiatePaymentSession } from "@lib/data/cart"
+import {
+  isFlow,
+  isStripeLike,
+  isTransfer,
+  paymentInfoMap,
+  TRANSFER_DISCOUNT_PERCENT,
+  TRANSFER_PROMO_CODE,
+} from "@lib/constants"
+import { applyPromotions, initiatePaymentSession } from "@lib/data/cart"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, {
@@ -52,9 +59,31 @@ const Payment = ({
         "Tu pago aún no se confirma. Si ya pagaste, espera unos minutos: te enviaremos un correo cuando esté listo.",
     }[searchParams.get("payment_error") ?? ""] ?? null
 
+  // El descuento por transferencia se aplica al elegir ese medio y se quita al elegir otro.
+  const syncTransferDiscount = async (method: string) => {
+    const codes = (cart.promotions ?? [])
+      .map((promotion) => promotion.code)
+      .filter((code): code is string => Boolean(code))
+    const hasDiscount = codes.some(
+      (code) => code.toUpperCase() === TRANSFER_PROMO_CODE
+    )
+    if (isTransfer(method) && !hasDiscount) {
+      await applyPromotions([...codes, TRANSFER_PROMO_CODE])
+    } else if (!isTransfer(method) && hasDiscount) {
+      await applyPromotions(
+        codes.filter((code) => code.toUpperCase() !== TRANSFER_PROMO_CODE)
+      )
+    }
+  }
+
   const setPaymentMethod = async (method: string) => {
     setError(null)
     setSelectedPaymentMethod(method)
+    try {
+      await syncTransferDiscount(method)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
     if (isStripeLike(method)) {
       await initiatePaymentSession(cart, {
         provider_id: method,
@@ -174,7 +203,16 @@ const Payment = ({
                         paymentInfoMap={paymentInfoMap}
                         paymentProviderId={paymentMethod.id}
                         selectedPaymentOptionId={selectedPaymentMethod}
-                      />
+                      >
+                        {isTransfer(paymentMethod.id) && (
+                          <Text className="txt-compact-small text-ui-fg-subtle">
+                            {TRANSFER_DISCOUNT_PERCENT}% de descuento en los
+                            productos. Te enviamos los datos bancarios por
+                            correo y el pedido se confirma al acreditarse la
+                            transferencia.
+                          </Text>
+                        )}
+                      </PaymentContainer>
                     )}
                   </div>
                 ))}
