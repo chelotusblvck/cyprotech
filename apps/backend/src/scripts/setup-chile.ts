@@ -20,10 +20,10 @@ import {
   updateStoresWorkflow,
 } from "@medusajs/medusa/core-flows";
 
-// Valores provisorios: USD 3 (Santiago) y USD 6 (regiones) al TC referencial.
-// Los reemplaza el job de tipo de cambio cuando exista el módulo de precios.
-const SHIPPING_SANTIAGO_CLP = 2900;
-const SHIPPING_REGIONES_CLP = 5700;
+// Valores iniciales: USD 3 (Santiago) y USD 6 (regiones) al TC referencial, mas $1.000.
+// Los reemplaza el job shipping-prices-sync con el tipo de cambio del dia.
+const SHIPPING_SANTIAGO_CLP = 3850;
+const SHIPPING_REGIONES_CLP = 6700;
 
 // ISO 3166-2:CL — Región Metropolitana vs. las otras 15 regiones.
 const PROVINCE_RM = "cl-rm";
