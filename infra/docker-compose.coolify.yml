@@ -99,6 +99,15 @@ services:
       MAIL_FROM: ${MAIL_FROM:-Cyprotech <no-reply@cyprotech.cl>}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL:-contacto@cyprotech.cl}
       ALERT_EMAIL: ${ALERT_EMAIL:-}
+      # Transferencia directa (datos bancarios: se cargan en Coolify, no aqui)
+      TRANSFER_BANK_HOLDER: ${TRANSFER_BANK_HOLDER:-}
+      TRANSFER_BANK_RUT: ${TRANSFER_BANK_RUT:-}
+      TRANSFER_BANK_NAME: ${TRANSFER_BANK_NAME:-}
+      TRANSFER_BANK_ACCOUNT_TYPE: ${TRANSFER_BANK_ACCOUNT_TYPE:-}
+      TRANSFER_BANK_ACCOUNT_NUMBER: ${TRANSFER_BANK_ACCOUNT_NUMBER:-}
+      TRANSFER_BANK_EMAIL: ${TRANSFER_BANK_EMAIL:-}
+      TRANSFER_DISCOUNT_PERCENT: ${TRANSFER_DISCOUNT_PERCENT:-2.5}
+      TRANSFER_DEADLINE_HOURS: ${TRANSFER_DEADLINE_HOURS:-48}
       # Novedades: fuentes RSS (direcciones separadas por coma) para traer borradores. Vacío = solo notas manuales.
       NEWS_RSS_FEEDS: ${NEWS_RSS_FEEDS:-}
     volumes:
