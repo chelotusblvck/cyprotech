@@ -6,7 +6,7 @@ import {
   type OrderForIntcomex,
 } from "../orders/build-order"
 
-const pricing = { marginPercent: 10, ivaPercent: 19, roundTo: 10, fxBufferPercent: 0 }
+const pricing = { marginPercent: 10, ivaPercent: 19, roundTo: 10, fxBufferPercent: 0, paymentFeePercent: 2.89, minNetMarginPercent: 5 }
 
 const order: OrderForIntcomex = {
   id: "order_01ABC",

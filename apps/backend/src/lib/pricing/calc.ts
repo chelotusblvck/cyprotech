@@ -37,9 +37,16 @@ export const normalizeCurrency = (currencyId: string | null | undefined): "USD" 
   return "USD"
 }
 
+// Recargo mínimo sobre el costo neto para que, descontada la comisión de la pasarela,
+// quede al menos minNetMarginPercent. La comisión se calcula sobre el cobro con IVA.
+export const floorMarginPercent = (config: PricingConfig): number => {
+  const feeOverNetSale = (config.paymentFeePercent / 100) * (1 + config.ivaPercent / 100)
+  return ((1 + config.minNetMarginPercent / 100) / (1 - feeOverNetSale) - 1) * 100
+}
+
 const round2 = (value: number) => Math.round(value * 100) / 100
 
-// Precio neto de venta = costo neto x TC x (1 + margen)
+// Precio neto de venta = costo neto x TC x (1 + margen), con el margen nunca bajo el piso.
 // Precio público      = precio neto de venta x (1 + IVA), redondeado hacia arriba.
 export const calculatePrice = (
   cost: CostInput,
@@ -59,7 +66,8 @@ export const calculatePrice = (
   }
 
   const costNetClp = cost.costNet * fxRate
-  const netSaleClp = costNetClp * (1 + config.marginPercent / 100)
+  const marginPercent = Math.max(config.marginPercent, floorMarginPercent(config))
+  const netSaleClp = costNetClp * (1 + marginPercent / 100)
   const publicPriceRaw = netSaleClp * (1 + config.ivaPercent / 100)
 
   const step = config.roundTo > 0 ? config.roundTo : 1
@@ -72,7 +80,7 @@ export const calculatePrice = (
     costCurrency: cost.currency,
     fxRate,
     costNetClp: round2(costNetClp),
-    marginPercent: config.marginPercent,
+    marginPercent: round2(marginPercent),
     netSaleClp: round2(netSaleClp),
     ivaPercent: config.ivaPercent,
     publicPriceRaw: round2(publicPriceRaw),
