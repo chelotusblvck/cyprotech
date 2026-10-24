@@ -57,6 +57,12 @@ export type OrderEmailData = {
   tracking?: TrackingInfo[]
 }
 
+export type TransferEmailData = OrderEmailData & {
+  bank: { holder: string; rut: string; bank: string; accountType: string; accountNumber: string; email: string }
+  // Fecha limite para pagar, ya formateada ("26 de octubre").
+  deadline: string
+}
+
 export type DocumentEmailData = {
   brand?: Partial<Brand>
   orderNumber: string
@@ -236,6 +242,69 @@ export const renderOrderConfirmed = (data: OrderEmailData): RenderedEmail => {
   }
 }
 
+// Pedido recibido, a la espera de la transferencia. No dice "confirmado": eso llega cuando se acredita el pago.
+export const renderOrderAwaitingTransfer = (data: TransferEmailData): RenderedEmail => {
+  const brand = brandOf(data.brand)
+  const bank = data.bank
+  const body = [
+    hero(
+      "Pedido recibido",
+      `Gracias, ${firstName(data.customerName)}`,
+      `Para confirmar tu pedido, transfiere ${money(data.total)} antes del ${data.deadline}. Lo reservamos hasta entonces.`,
+      data.orderNumber,
+      COLORS.cyan,
+    ),
+    gap(),
+    row(
+      infoBlock("Datos para la transferencia", [
+        esc(bank.holder),
+        `RUT ${esc(bank.rut)}`,
+        `${esc(bank.bank)} · ${esc(bank.accountType)}`,
+        `N° ${esc(bank.accountNumber)}`,
+        esc(bank.email),
+      ]),
+    ),
+    gap(12),
+    row(
+      paragraph(
+        `Indica el número de pedido <strong>${esc(data.orderNumber)}</strong> en el comentario y envía el comprobante a ${esc(bank.email)}. Cuando veamos el pago te avisaremos y prepararemos tu pedido.`,
+      ),
+    ),
+    gap(),
+    divider(),
+    gap(8),
+    row(`${label("Tu pedido")}<div style="height:6px;line-height:6px;font-size:1px">&nbsp;</div>${itemsTable(data.items)}${totalsTable(data)}`),
+    gap(),
+    row(infoBlock("Despacho", addressLines(data.address), `${esc(data.shippingMethod)} · ${esc(data.eta)}`)),
+    gap(30),
+    row(button("Ver mi pedido", data.orderUrl)),
+    gap(40),
+  ].join("")
+
+  return {
+    subject: `Pedido ${data.orderNumber}: falta tu transferencia`,
+    html: layout({
+      preheader: `Transfiere ${money(data.total)} antes del ${data.deadline} para confirmar tu pedido.`,
+      title: `Pedido ${data.orderNumber} pendiente de pago`,
+      body,
+      brand,
+    }),
+    text: [
+      `Gracias, ${firstName(data.customerName)}. Recibimos tu pedido ${data.orderNumber}.`,
+      `Para confirmarlo, transfiere ${money(data.total)} antes del ${data.deadline}:`,
+      "",
+      `${bank.holder} - RUT ${bank.rut}`,
+      `${bank.bank} - ${bank.accountType} N° ${bank.accountNumber}`,
+      `Correo: ${bank.email}`,
+      `Comentario: ${data.orderNumber}`,
+      "",
+      summaryText(data),
+      "",
+      `Ver mi pedido: ${data.orderUrl}`,
+    ].join("\n"),
+  }
+}
+
 export const renderOrderShipped = (data: OrderEmailData): RenderedEmail => {
   const brand = brandOf(data.brand)
   const tracking = data.tracking?.length ? data.tracking : [{}]
@@ -364,6 +433,7 @@ export const renderInternalAlert = (data: AlertEmailData): RenderedEmail => {
 
 export const TEMPLATES = {
   "order-confirmed": renderOrderConfirmed,
+  "order-awaiting-transfer": renderOrderAwaitingTransfer,
   "order-shipped": renderOrderShipped,
   "order-delivered": renderOrderDelivered,
   "document-ready": renderDocumentReady,

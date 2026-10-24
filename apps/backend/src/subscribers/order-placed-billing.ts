@@ -1,6 +1,7 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 
 import { issueDocument } from "../modules/billing/operations"
+import { isAwaitingTransfer, loadTransferState } from "../lib/transfer/state"
 import { billingDeps, loadOrderForBilling } from "../modules/billing/runtime"
 
 // Emite la boleta (o la factura, si el cliente la pidió) apenas se confirma el pago. Se apaga con
@@ -8,6 +9,10 @@ import { billingDeps, loadOrderForBilling } from "../modules/billing/runtime"
 // billing-retry); no afectan la venta.
 export default async function orderPlacedBillingHandler({ event: { data }, container }: SubscriberArgs<{ id: string }>) {
   if (process.env.BILLING_AUTO_ISSUE === "false") {
+    return
+  }
+  // Transferencia sin pago recibido: se factura al capturar el pago (payment-captured-transfer).
+  if (isAwaitingTransfer(await loadTransferState(container, data.id))) {
     return
   }
   const order = await loadOrderForBilling(container, data.id)
