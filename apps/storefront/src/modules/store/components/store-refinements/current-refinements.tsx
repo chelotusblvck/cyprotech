@@ -7,6 +7,8 @@ import { indexedCurrency, priceAttribute } from "@lib/search-client"
 import { convertToLocale } from "@lib/util/money"
 import {
   CATEGORY_ATTRIBUTE,
+  BRAND_ATTRIBUTE,
+  GAMER_LABEL,
   LABELS_ATTRIBUTE,
   OPTION_VALUES_ATTRIBUTE,
 } from "./attributes"
@@ -50,11 +52,15 @@ function refinementLabel(refinement: Refinement, currencyCode: string) {
   }
 
   if (attribute === CATEGORY_ATTRIBUTE) {
-    return `Category: ${label}`
+    return `Categoría: ${label}`
+  }
+
+  if (attribute === BRAND_ATTRIBUTE) {
+    return `Marca: ${label}`
   }
 
   if (attribute === LABELS_ATTRIBUTE) {
-    return `Label: ${label}`
+    return label === GAMER_LABEL ? "Gaming" : `Etiqueta: ${label}`
   }
 
   return label

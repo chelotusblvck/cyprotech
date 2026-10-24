@@ -5,11 +5,12 @@ import { useSortBy } from "react-instantsearch"
 
 import FilterRadioGroup from "@modules/common/components/filter-radio-group"
 import {
+  BRAND_ATTRIBUTE,
   CATEGORY_ATTRIBUTE,
-  LABELS_ATTRIBUTE,
   getSortOptions,
 } from "./attributes"
 import CurrentRefinements from "./current-refinements"
+import GamerToggle from "./gamer-toggle"
 import OnSaleToggle from "./on-sale-toggle"
 import OptionRefinements from "./option-refinements"
 import PriceRange from "./price-range"
@@ -55,9 +56,10 @@ const StoreRefinements = ({ currencyCode }: { currencyCode: string }) => {
         <CurrentRefinements currencyCode={currencyCode} />
         <OptionRefinements />
         <PriceRange currencyCode={currencyCode} />
+        <GamerToggle />
         <OnSaleToggle currencyCode={currencyCode} />
         <RefinementGroup attribute={CATEGORY_ATTRIBUTE} title="Categoría" />
-        <RefinementGroup attribute={LABELS_ATTRIBUTE} title="Etiquetas" />
+        <RefinementGroup attribute={BRAND_ATTRIBUTE} title="Marca" />
       </div>
     </div>
   )
