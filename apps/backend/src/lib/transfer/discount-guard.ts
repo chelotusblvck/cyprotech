@@ -1,12 +1,14 @@
+import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
-import { completeCartWorkflow } from "@medusajs/medusa/core-flows"
 
-import { TRANSFER_PROMO_CODE, TRANSFER_PROVIDER_ID } from "../../lib/transfer/config"
+import { TRANSFER_PROMO_CODE, TRANSFER_PROVIDER_ID } from "./config"
 
 // El descuento por transferencia reemplaza la comision de Flow que no se paga: si el cliente lo escribe
 // a mano y paga con otro medio, el margen quedaria bajo el piso. La tienda lo aplica al elegir
 // transferencia; aqui se impide completar la compra con ese codigo y otro medio de pago.
-completeCartWorkflow.hooks.validate(async ({ cart }, { container }) => {
+// Medusa admite un solo manejador del hook validate de completeCartWorkflow: lo invoca
+// workflows/hooks/verify-intcomex-at-checkout.ts.
+export async function assertTransferDiscountOnlyWithTransfer(cart: unknown, container: MedusaContainer) {
   const promotions = ((cart as { promotions?: { code?: string | null }[] }).promotions ?? []).map((promotion) =>
     (promotion.code ?? "").toUpperCase(),
   )
@@ -30,4 +32,4 @@ completeCartWorkflow.hooks.validate(async ({ cart }, { container }) => {
       "El descuento por transferencia solo vale al pagar por transferencia. Quita el codigo o elige transferencia.",
     )
   }
-})
+}
