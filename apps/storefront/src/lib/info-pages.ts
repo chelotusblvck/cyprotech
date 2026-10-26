@@ -3,6 +3,8 @@
 // los textos legales deben ser revisados por el titular o un abogado antes de publicarse. Mientras
 // exista algun [COMPLETAR], la pagina se marca como noindex (ver app/[countryCode]/(main)/[page]).
 
+import { TRANSFER_DISCOUNT_PERCENT, TRANSFER_ENABLED } from "@lib/constants"
+
 export type InfoSection = {
   heading: string
   paragraphs?: string[]
@@ -55,9 +57,14 @@ export const INFO_PAGES: InfoPage[] = [
         ],
       },
       {
-        heading: "4. Paga de forma segura con Flow",
+        heading: "4. Paga de forma segura",
         paragraphs: [
-          "Los pagos se procesan a través de Flow, un proveedor de pagos con medios de pago habilitados en Chile. Tus datos de pago los ingresas en la plataforma de Flow; Cyprotech no los almacena.",
+          "Los pagos en línea se procesan a través de Flow, un proveedor de pagos con medios de pago habilitados en Chile. Tus datos de pago los ingresas en la plataforma de Flow; Cyprotech no los almacena.",
+          ...(TRANSFER_ENABLED
+            ? [
+                `También puedes pagar por transferencia bancaria, con ${TRANSFER_DISCOUNT_PERCENT}% de descuento en los productos. Te enviamos los datos por correo y el pedido se confirma al acreditarse el pago.`,
+              ]
+            : []),
         ],
       },
       {
@@ -143,7 +150,11 @@ export const INFO_PAGES: InfoPage[] = [
     sections: [
       {
         heading: "¿Qué medios de pago aceptan?",
-        paragraphs: ["Los pagos se procesan con Flow. En el checkout verás los medios de pago habilitados."],
+        paragraphs: [
+          TRANSFER_ENABLED
+            ? `Pagas en línea con Flow (en el checkout verás los medios habilitados) o por transferencia bancaria, con ${TRANSFER_DISCOUNT_PERCENT}% de descuento en los productos.`
+            : "Los pagos se procesan con Flow. En el checkout verás los medios de pago habilitados.",
+        ],
       },
       {
         heading: "¿Cuánto demora mi pedido?",

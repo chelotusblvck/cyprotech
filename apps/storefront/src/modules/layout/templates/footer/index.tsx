@@ -1,5 +1,6 @@
 import { listCategories, listCategoryHandlesWithProducts } from "@lib/data/categories"
 import { BRAND, HIDDEN_CATEGORY_HANDLES } from "@lib/brand"
+import { TRANSFER_DISCOUNT_PERCENT, TRANSFER_ENABLED } from "@lib/constants"
 import { INFO_PAGES } from "@lib/info-pages"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -110,7 +111,9 @@ export default async function Footer() {
           <span className="font-display uppercase tracking-wider text-ui-fg-base text-sm">Medios de pago</span>
           <PaymentsByFlow />
           <p className="txt-compact-small text-ui-fg-muted">
-            Los medios de pago disponibles se muestran en la plataforma de Flow al pagar.
+            {TRANSFER_ENABLED
+              ? `Paga con los medios habilitados en Flow o por transferencia bancaria, con ${TRANSFER_DISCOUNT_PERCENT}% de descuento en los productos.`
+              : "Los medios de pago disponibles se muestran en la plataforma de Flow al pagar."}
           </p>
         </div>
 

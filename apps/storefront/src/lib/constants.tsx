@@ -63,6 +63,8 @@ export const isTransfer = (providerId?: string) => {
 
 // Codigo de la promocion que el backend crea con setup-transfer (descuento al pagar por transferencia).
 export const TRANSFER_PROMO_CODE = "TRANSFERENCIA"
+// La transferencia se declara habilitada con NEXT_PUBLIC_TRANSFER_ENABLED=true (despues de setup-transfer en el backend).
+export const TRANSFER_ENABLED = process.env.NEXT_PUBLIC_TRANSFER_ENABLED === "true"
 // Solo para mostrar; el descuento real lo define el backend (TRANSFER_DISCOUNT_PERCENT).
 export const TRANSFER_DISCOUNT_PERCENT = Number(
   process.env.NEXT_PUBLIC_TRANSFER_DISCOUNT_PERCENT ?? "2.5"
