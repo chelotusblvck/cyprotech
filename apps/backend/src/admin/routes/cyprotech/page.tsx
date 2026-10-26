@@ -152,7 +152,7 @@ const DashboardPage = () => {
   const sendTestEmail = () =>
     run(
       "test-email",
-      () => api("/admin/notifications/test", { method: "POST", body: { to: testTo, template: "order-confirmed" } }),
+      () => api("/admin/notifications/send-test", { method: "POST", body: { to: testTo, template: "order-confirmed" } }),
       `Correo de prueba enviado a ${testTo}`,
     )
 
