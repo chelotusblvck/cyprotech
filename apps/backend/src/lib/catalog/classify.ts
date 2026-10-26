@@ -1,5 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { detectBrand, GAMER_TAG, isGamer } from "./brands"
 
@@ -96,7 +97,10 @@ export const classifyProducts = async (
       if (gamer) {
         tagIds.push(await ensureGamerTag())
       }
-      await productService.updateProducts(product.id, { metadata: nextMetadata, tag_ids: tagIds })
+      // Con el workflow se emite product.updated y el indice de busqueda (filtros Marca y gaming) se entera.
+      await updateProductsWorkflow(container).run({
+        input: { selector: { id: product.id }, update: { metadata: nextMetadata, tag_ids: tagIds } },
+      })
     }
   }
   return changes
