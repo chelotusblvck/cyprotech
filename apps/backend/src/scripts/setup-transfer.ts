@@ -72,7 +72,7 @@ export default async function setupTransfer({ container }: ExecArgs) {
           application_method: {
             type: "percentage",
             target_type: "items",
-            allocation: "each",
+            allocation: "across",
             value: config.discountPercent,
             currency_code: "clp",
           },
