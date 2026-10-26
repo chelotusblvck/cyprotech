@@ -1,13 +1,23 @@
-import { listCategories } from "@lib/data/categories"
-import { BRAND } from "@lib/brand"
+import { listCategories, listCategoryHandlesWithProducts } from "@lib/data/categories"
+import { BRAND, HIDDEN_CATEGORY_HANDLES } from "@lib/brand"
+import { TRANSFER_DISCOUNT_PERCENT, TRANSFER_ENABLED } from "@lib/constants"
+import { INFO_PAGES } from "@lib/info-pages"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Logo from "@modules/layout/components/logo"
+import PaymentsByFlow from "@modules/common/components/payments-by-flow"
 
 const linkClass = "hover:text-neon-magenta transition-colors"
 
 export default async function Footer() {
-  const productCategories = await listCategories()
+  const [allCategories, withProducts] = await Promise.all([
+    listCategories(),
+    listCategoryHandlesWithProducts(),
+  ])
+  // Sin categorias internas ni vacias (si no se pudo saber cuales tienen productos, se muestran todas).
+  const productCategories = allCategories?.filter(
+    (c) => !HIDDEN_CATEGORY_HANDLES.includes(c.handle) && (withProducts?.has(c.handle) ?? true)
+  )
 
   return (
     <footer className="relative w-full border-t border-ui-border-base mt-24">
@@ -21,7 +31,7 @@ export default async function Footer() {
             </p>
           </div>
 
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
+          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-4">
             {productCategories && productCategories.length > 0 && (
               <div className="flex flex-col gap-y-3">
                 <span className="font-display uppercase tracking-wider text-ui-fg-base">
@@ -45,6 +55,21 @@ export default async function Footer() {
                 </ul>
               </div>
             )}
+
+            <div className="flex flex-col gap-y-3">
+              <span className="font-display uppercase tracking-wider text-ui-fg-base">
+                Ayuda
+              </span>
+              <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small" data-testid="footer-help">
+                {INFO_PAGES.map((page) => (
+                  <li key={page.slug}>
+                    <LocalizedClientLink className={linkClass} href={`/${page.slug}`}>
+                      {page.title}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             <div className="flex flex-col gap-y-3">
               <span className="font-display uppercase tracking-wider text-ui-fg-base">
@@ -80,6 +105,16 @@ export default async function Footer() {
               </ul>
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-ui-border-base py-6">
+          <span className="font-display uppercase tracking-wider text-ui-fg-base text-sm">Medios de pago</span>
+          <PaymentsByFlow />
+          <p className="txt-compact-small text-ui-fg-muted">
+            {TRANSFER_ENABLED
+              ? `Paga con los medios habilitados en Flow o por transferencia bancaria, con ${TRANSFER_DISCOUNT_PERCENT}% de descuento en los productos.`
+              : "Los medios de pago disponibles se muestran en la plataforma de Flow al pagar."}
+          </p>
         </div>
 
         <div className="flex flex-col gap-2 small:flex-row w-full py-8 justify-between border-t border-ui-border-base txt-compact-small text-ui-fg-muted">

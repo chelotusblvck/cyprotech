@@ -1,6 +1,6 @@
 import { Container, Heading, Text } from "@modules/common/components/ui"
 
-import { isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isStripeLike, isTransfer, paymentInfoMap } from "@lib/constants"
 import Divider from "@modules/common/components/divider"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -11,6 +11,11 @@ type PaymentDetailsProps = {
 
 const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   const payment = order.payment_collections?.[0].payments?.[0]
+  // Una transferencia queda sin capturar hasta que se acredita el deposito.
+  const awaitingTransfer =
+    !!payment &&
+    isTransfer(payment.provider_id) &&
+    !(payment as { captured_at?: string | null }).captured_at
 
   return (
     <div>
@@ -28,7 +33,8 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method"
               >
-                {paymentInfoMap[payment.provider_id].title}
+                {paymentInfoMap[payment.provider_id]?.title ??
+                  payment.provider_id}
               </Text>
             </div>
             <div className="flex flex-col w-2/3">
@@ -37,10 +43,12 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
               </Text>
               <div className="flex gap-2 txt-medium text-ui-fg-subtle items-center">
                 <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
-                  {paymentInfoMap[payment.provider_id].icon}
+                  {paymentInfoMap[payment.provider_id]?.icon}
                 </Container>
                 <Text data-testid="payment-amount">
-                  {isStripeLike(payment.provider_id) && payment.data?.card_last4
+                  {awaitingTransfer
+                    ? "Pendiente: revisa tu correo con los datos para transferir. Confirmamos el pedido al acreditarse el pago."
+                    : isStripeLike(payment.provider_id) && payment.data?.card_last4
                     ? `**** **** **** ${payment.data.card_last4}`
                     : `${convertToLocale({
                         amount: payment.amount,

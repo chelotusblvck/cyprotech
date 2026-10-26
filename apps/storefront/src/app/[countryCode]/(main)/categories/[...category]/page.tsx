@@ -24,7 +24,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const title = productCategory.name + ""
 
-    const description = productCategory.description ?? `${title} category.`
+    const description = productCategory.description ?? `Compra ${title} en Cyprotech, con despacho a todo Chile.`
 
     return {
       title: `${title}`,

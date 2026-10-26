@@ -9,8 +9,10 @@ import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { listCategoryHandlesWithProducts } from "@lib/data/categories"
+import { HIDDEN_CATEGORY_HANDLES } from "@lib/brand"
 
-export default function CategoryTemplate({
+export default async function CategoryTemplate({
   category,
   sortBy,
   page,
@@ -27,6 +29,14 @@ export default function CategoryTemplate({
   const sort = sortBy || "created_at"
 
   if (!category || !countryCode) notFound()
+
+  // La categoria madre muestra tambien los productos de sus subcategorias, y el listado de
+  // subcategorias solo ofrece las que tienen productos.
+  const withProducts = await listCategoryHandlesWithProducts()
+  const children = (category.category_children ?? []).filter(
+    (child) => !HIDDEN_CATEGORY_HANDLES.includes(child.handle) && (withProducts?.has(child.handle) ?? true)
+  )
+  const categoryIds = [category.id, ...(category.category_children ?? []).map((child) => child.id)]
 
   const parents = [] as HttpTypes.StoreProductCategory[]
 
@@ -71,10 +81,10 @@ export default function CategoryTemplate({
             <p>{category.description}</p>
           </div>
         )}
-        {category.category_children && (
+        {children.length > 0 && (
           <div className="mb-8 text-base-large">
             <ul className="grid grid-cols-1 gap-2">
-              {category.category_children?.map((c) => (
+              {children.map((c) => (
                 <li key={c.id}>
                   <InteractiveLink href={`/categories/${c.handle}`}>
                     {c.name}
@@ -94,7 +104,7 @@ export default function CategoryTemplate({
           <PaginatedProducts
             sortBy={sort}
             page={pageNumber}
-            categoryId={category.id}
+            categoryId={categoryIds}
             countryCode={countryCode}
             optionValueIds={optionValueIds}
           />

@@ -68,7 +68,16 @@ export default async function NovedadesPage(props: {
           <Pager page={page} pages={pages} hrefFor={hrefFor} />
         </>
       ) : (
-        <p className="mt-16 text-center text-ui-fg-subtle">Todavía no hay notas en esta categoría.</p>
+        <div className="mt-16 flex flex-col items-center gap-y-3 text-center text-ui-fg-subtle">
+          <p>
+            {category
+              ? "Todavía no hay notas en esta categoría."
+              : "Estamos preparando las primeras notas. Vuelve pronto."}
+          </p>
+          <LocalizedClientLink href="/store" className="text-ui-fg-interactive hover:underline">
+            Ver la tienda
+          </LocalizedClientLink>
+        </div>
       )}
     </div>
   )

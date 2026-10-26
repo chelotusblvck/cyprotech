@@ -1,8 +1,12 @@
-import { calculatePrice, normalizeCurrency } from "../calc"
+import { calculatePrice, floorMarginPercent, normalizeCurrency } from "../calc"
 import { loadPricingConfig } from "../config"
 import { fetchUsdClp } from "../fx"
 
-const config = { marginPercent: 10, ivaPercent: 19, roundTo: 10, fxBufferPercent: 0 }
+const config = {
+  marginPercent: 10, ivaPercent: 19, roundTo: 10, fxBufferPercent: 0,
+  paymentFeePercent: 2.89,
+  minNetMarginPercent: 5,
+}
 
 describe("calculatePrice", () => {
   it("aplica TC, margen sobre costo neto y luego IVA", () => {
@@ -94,5 +98,29 @@ describe("fetchUsdClp", () => {
     await expect(
       fetchUsdClp(async () => ({ ok: true, status: 200, json: async () => ({ serie: [] }) })),
     ).rejects.toThrow(/válido/)
+  })
+})
+
+describe("piso de margen", () => {
+  it("el recargo minimo para 5% neto tras Flow es ~8,8%", () => {
+    expect(floorMarginPercent(config)).toBeGreaterThan(8.7)
+    expect(floorMarginPercent(config)).toBeLessThan(8.9)
+  })
+
+  it("sube un margen configurado bajo el piso", () => {
+    const result = calculatePrice({ costNet: 100, currency: "USD" }, 950, { ...config, marginPercent: 3 })
+    expect(result.marginPercent).toBeGreaterThan(8.7)
+  })
+
+  it("respeta un margen configurado sobre el piso", () => {
+    const result = calculatePrice({ costNet: 100, currency: "USD" }, 950, config)
+    expect(result.marginPercent).toBe(10)
+  })
+
+  it("el margen neto tras la comision de Flow nunca baja de 5%", () => {
+    const result = calculatePrice({ costNet: 100, currency: "USD" }, 950, { ...config, marginPercent: 0 })
+    const flowFee = result.publicPrice * 0.0289
+    const netAfterFlow = result.publicPrice / 1.19 - flowFee * 1 - result.costNetClp
+    expect(netAfterFlow / result.costNetClp).toBeGreaterThanOrEqual(0.05)
   })
 })

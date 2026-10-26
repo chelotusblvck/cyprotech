@@ -3,6 +3,8 @@ import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
 
+const RELATED_LIMIT = 4
+
 type RelatedProductsProps = {
   product: HttpTypes.StoreProduct
   countryCode: string
@@ -18,28 +20,29 @@ export default async function RelatedProducts({
     return null
   }
 
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {}
+  // Relacionados = misma categoria. Sin categoria no hay criterio, asi que no se muestra la seccion
+  // (antes salian productos cualquiera, p. ej. memorias RAM junto a una tarjeta de video).
+  const categoryIds = (product.categories ?? []).map((category) => category.id)
+  if (!categoryIds.length) {
+    return null
+  }
+
+  const queryParams: HttpTypes.StoreProductListParams = {
+    category_id: categoryIds,
+    limit: RELATED_LIMIT + 1,
+    is_giftcard: false,
+  }
   if (region?.id) {
     queryParams.region_id = region.id
   }
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
-  }
-  if (product.tags) {
-    queryParams.tag_id = product.tags
-      .map((t) => t.id)
-      .filter(Boolean) as string[]
-  }
-  queryParams.is_giftcard = false
 
   const products = await listProducts({
     queryParams,
     countryCode,
   }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
+    return response.products
+      .filter((responseProduct) => responseProduct.id !== product.id)
+      .slice(0, RELATED_LIMIT)
   })
 
   if (!products.length) {

@@ -49,11 +49,11 @@ export default function CategoryMenu({ categories }: { categories: NavCategory[]
                   }`}
                 >
                   <LocalizedClientLink
-                    href={`/categories/${category.handle}`}
-                    aria-label={`Ver todo ${category.name}`}
+                    href="/store"
+                    aria-label="Ver todos los productos de la tienda"
                     className="mb-2 flex items-center justify-between rounded-rounded px-3 py-2 font-display text-[13px] font-semibold uppercase tracking-wider text-ui-fg-interactive transition-colors hover:bg-ui-bg-base-hover"
                   >
-                    Ver todo
+                    Ver toda la tienda
                     <span aria-hidden="true">→</span>
                   </LocalizedClientLink>
                   <ul className={`grid gap-x-2 ${wide ? "grid-cols-2" : "grid-cols-1"}`}>

@@ -7,6 +7,9 @@ export const BRAND = {
   legalName: "Cyprotech",
 }
 
+// Categorias de uso interno (p. ej. productos con detalles/liquidacion): no se enlazan en menus ni footer.
+export const HIDDEN_CATEGORY_HANDLES = ["productos-con-detalles"]
+
 export const MAIN_CATEGORIES = [
   { name: "Gaming", handle: "gaming" },
   { name: "PC y Notebooks", handle: "pc-y-notebooks" },

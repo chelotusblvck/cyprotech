@@ -172,6 +172,7 @@ html {
 }
 
 body {
+  overflow-x: clip;
   background:
     radial-gradient(1100px 600px at 12% -8%, var(--cy-glow-a), transparent 60%),
     radial-gradient(900px 560px at 92% 4%, var(--cy-glow-b), transparent 60%),

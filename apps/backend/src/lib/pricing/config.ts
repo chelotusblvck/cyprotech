@@ -7,6 +7,10 @@ export type PricingConfig = {
   roundTo: number
   // Colchón sobre el tipo de cambio, en porcentaje, para cubrir variaciones entre cobro y compra.
   fxBufferPercent: number
+  // Comisión de la pasarela (Flow) sobre el monto cobrado con IVA, en porcentaje. El IVA de la comisión es crédito fiscal.
+  paymentFeePercent: number
+  // Margen neto mínimo sobre el costo, DESPUÉS de la comisión de la pasarela, en porcentaje.
+  minNetMarginPercent: number
 }
 
 const num = (value: string | undefined, fallback: number) => {
@@ -19,4 +23,6 @@ export const loadPricingConfig = (env: NodeJS.ProcessEnv = process.env): Pricing
   ivaPercent: num(env.PRICING_IVA_PERCENT, 19),
   roundTo: num(env.PRICING_ROUND_TO, 10),
   fxBufferPercent: num(env.PRICING_FX_BUFFER_PERCENT, 0),
+  paymentFeePercent: num(env.PRICING_PAYMENT_FEE_PERCENT, 2.89),
+  minNetMarginPercent: num(env.PRICING_MIN_NET_MARGIN_PERCENT, 5),
 })

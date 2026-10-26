@@ -11,3 +11,4 @@ static
 
 # Carga manual de productos de Intcomex (salida del extractor)
 intcomex-manual*.json
+comparacion-precios*.csv

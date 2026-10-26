@@ -1,6 +1,6 @@
 "use client"
 
-import { isFlow, isManual, isStripeLike } from "@lib/constants"
+import { isFlow, isManual, isStripeLike, isTransfer } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
@@ -42,6 +42,13 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           notReady={notReady}
           redirectUrl={paymentSession?.data?.redirectUrl as string | undefined}
           data-testid={dataTestId}
+        />
+      )
+    case isTransfer(paymentSession?.provider_id):
+      return (
+        <ManualTestPaymentButton
+          notReady={notReady}
+          label="Realizar pedido y pagar por transferencia"
         />
       )
     case isManual(paymentSession?.provider_id):
@@ -206,7 +213,13 @@ const FlowPaymentButton = ({
   )
 }
 
-const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+const ManualTestPaymentButton = ({
+  notReady,
+  label = "Realizar pedido",
+}: {
+  notReady: boolean
+  label?: string
+}) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -235,7 +248,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         size="large"
         data-testid="submit-order-button"
       >
-        Realizar pedido
+        {label}
       </Button>
       <ErrorMessage
         error={errorMessage}

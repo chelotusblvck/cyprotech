@@ -59,6 +59,7 @@ export const ORDER_EMAIL_FIELDS = [
 
 const PAYMENT_LABELS: Record<string, string> = {
   pp_flow_flow: "Flow (tarjeta, débito o transferencia)",
+  pp_transfer_transfer: "Transferencia bancaria",
   pp_system_default: "Pago manual",
 }
 

@@ -2,6 +2,9 @@ import { PRODUCT_INDEX_NAME, priceAttribute } from "@lib/search-client"
 
 export const OPTION_VALUES_ATTRIBUTE = "option_values"
 export const CATEGORY_ATTRIBUTE = "category"
+export const BRAND_ATTRIBUTE = "brand"
+// Etiqueta que marca los productos gamer (la asigna el backend, ver lib/catalog/brands.ts).
+export const GAMER_LABEL = "gamer"
 // The index calls the product's tags "labels".
 export const LABELS_ATTRIBUTE = "labels"
 

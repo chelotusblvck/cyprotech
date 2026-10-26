@@ -41,39 +41,45 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
+const metaText = (product: HttpTypes.StoreProduct, key: string) => {
+  const value = product.metadata?.[key]
+  return typeof value === "string" && value.trim() ? value.trim() : null
+}
+
+// Solo se muestran los datos que existen; los guiones vacios no aportan nada al cliente.
 const ProductInfoTab = ({ product }: ProductTabsProps) => {
+  const variantWeight = product.variants?.find((variant) => variant.weight)?.weight
+  const rows: [string, string | null][] = [
+    ["Marca", metaText(product, "brand")],
+    ["Número de parte", metaText(product, "mpn")],
+    ["SKU", metaText(product, "sku")],
+    ["Material", product.material ?? null],
+    ["País de origen", product.origin_country ?? null],
+    ["Tipo", product.type?.value ?? null],
+    ["Peso", product.weight || variantWeight ? `${product.weight || variantWeight} g` : null],
+    [
+      "Dimensiones",
+      product.length && product.width && product.height
+        ? `${product.length} x ${product.width} x ${product.height}`
+        : null,
+    ],
+  ]
+  const visible = rows.filter((row): row is [string, string] => Boolean(row[1]))
+
   return (
     <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Material</span>
-            <p>{product.material ? product.material : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">País de origen</span>
-            <p>{product.origin_country ? product.origin_country : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Tipo</span>
-            <p>{product.type ? product.type.value : "-"}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Peso</span>
-            <p>{product.weight ? `${product.weight} g` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Dimensiones</span>
-            <p>
-              {product.length && product.width && product.height
-                ? `${product.length} x ${product.width} x ${product.height}`
-                : "-"}
-            </p>
-          </div>
-        </div>
-      </div>
+      {visible.length ? (
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+          {visible.map(([label, value]) => (
+            <div key={label}>
+              <dt className="font-semibold">{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p>Sin información adicional por ahora.</p>
+      )}
     </div>
   )
 }

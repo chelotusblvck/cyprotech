@@ -61,6 +61,8 @@ module.exports = defineConfig({
         providers: [
           // Flow (Chile). El proveedor queda disponible como pp_flow_flow.
           { resolve: "./src/modules/flow", id: "flow" },
+          // Transferencia directa. El proveedor queda disponible como pp_transfer_transfer.
+          { resolve: "./src/modules/transfer", id: "transfer" },
         ],
       },
     },

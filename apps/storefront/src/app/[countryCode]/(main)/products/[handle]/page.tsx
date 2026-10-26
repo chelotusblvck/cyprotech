@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
+import { formatTitle } from "@lib/util/format-title"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
 
@@ -45,12 +46,22 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  const title = formatTitle(product.title)
+  // La descripcion importada son viñetas ("- dato"); se unen en un texto corto para buscadores.
+  const summary = (product.description ?? "")
+    .split("\n")
+    .map((line) => line.replace(/^[-•*]\s*/, "").trim())
+    .filter(Boolean)
+    .join(". ")
+    .slice(0, 155)
+  const description = summary ? `${title}. ${summary}` : title
+
   return {
-    title: `${product.title}`,
-    description: `${product.title}`,
+    title,
+    description,
     openGraph: {
-      title: `${product.title}`,
-      description: `${product.title}`,
+      title,
+      description,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }

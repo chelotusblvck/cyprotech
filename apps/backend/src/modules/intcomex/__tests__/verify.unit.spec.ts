@@ -3,7 +3,7 @@ import type { IntcomexApi, IwsProduct } from "../client/types"
 import type { SyncContext } from "../sync/plan"
 
 const context: SyncContext = {
-  pricing: { marginPercent: 10, ivaPercent: 19, roundTo: 10, fxBufferPercent: 0 },
+  pricing: { marginPercent: 10, ivaPercent: 19, roundTo: 10, fxBufferPercent: 0, paymentFeePercent: 2.89, minNetMarginPercent: 5 },
   usdClp: 1000,
   minStock: 3,
 }

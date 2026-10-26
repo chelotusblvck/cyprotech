@@ -1,4 +1,4 @@
-import type { AlertEmailData, DocumentEmailData, OrderEmailData, TemplateName } from "./templates"
+import type { AlertEmailData, DocumentEmailData, OrderEmailData, TemplateName, TransferEmailData } from "./templates"
 
 // Datos de ejemplo para previsualizar los correos (script de vista previa y envío de prueba del dashboard).
 export const sampleOrder = (storefrontUrl = "http://localhost:8000"): OrderEmailData => ({
@@ -31,6 +31,21 @@ export const sampleOrder = (storefrontUrl = "http://localhost:8000"): OrderEmail
   tracking: [{ carrier: "Starken", number: "7701234567", url: "https://www.starken.cl/seguimiento" }],
 })
 
+export const sampleTransfer = (storefrontUrl?: string): TransferEmailData => ({
+  ...sampleOrder(storefrontUrl),
+  paymentMethod: "Transferencia bancaria",
+  tracking: [],
+  bank: {
+    holder: "Garage360 SpA",
+    rut: "76.000.000-0",
+    bank: "Banco de ejemplo",
+    accountType: "Cuenta corriente",
+    accountNumber: "000000000",
+    email: "pagos@example.com",
+  },
+  deadline: "26 de octubre",
+})
+
 export const sampleDocument = (storefrontUrl = "http://localhost:8000"): DocumentEmailData => ({
   brand: { storefrontUrl },
   orderNumber: "CY1042",
@@ -54,6 +69,8 @@ export const sampleFor = (template: TemplateName, storefrontUrl?: string): unkno
   switch (template) {
     case "document-ready":
       return sampleDocument(storefrontUrl)
+    case "order-awaiting-transfer":
+      return sampleTransfer(storefrontUrl)
     case "internal-alert":
       return sampleAlert()
     default:
