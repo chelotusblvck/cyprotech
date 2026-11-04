@@ -32,7 +32,7 @@ Son dos recursos en Coolify porque la tienda necesita la *publishable key*, que 
 ### Antes de empezar
 
 1. Subir el repositorio a GitHub (privado). Hoy es solo local (`git init`, sin commits ni remoto).
-2. Dominio provisorio: `cypro.garage360.cl` (tienda) y `cypro-api.garage360.cl` (backend). Se usan subdominios de **un solo nivel** porque el certificado universal de Cloudflare no cubre `api.cypro.garage360.cl`. `garage360.cl` está detrás de Cloudflare con comodín, así que ya resuelven; en Cloudflare usar SSL/TLS en modo **Full** (no Flexible) para que Traefik emita su certificado. Al comprar `cyprotech.cl` en NIC.cl basta cambiar las variables de abajo y los dominios en Coolify.
+2. Dominio: `cyprotech.cl` (registros A de `cyprotech.cl` y `www` hacia `216.185.51.16`, con proxy de Cloudflare y SSL/TLS en modo **Full**). Un solo dominio para todo: la tienda atiende la raíz y el backend solo las rutas de Medusa (`/app`, `/admin`, `/store`, `/auth`, `/hooks`, `/static`, `/health`), enrutadas con las etiquetas de Traefik del servicio `backend` en `infra/docker-compose.coolify.yml`. El admin se usa en `https://cyprotech.cl/admin`, que redirige a `/app` (la interfaz no puede vivir en `/admin` porque esa ruta es la API del admin). Los dominios provisorios `cypro*.garage360.cl` quedan solo como respaldo mientras se verifica.
 3. En Coolify, conectar el repositorio (GitHub App o deploy key).
 
 ### 1. Núcleo (Docker Compose)
@@ -42,15 +42,15 @@ Nuevo recurso → Docker Compose → archivo `infra/docker-compose.coolify.yml`.
 | Variable | Valor |
 | --- | --- |
 | `POSTGRES_PASSWORD`, `JWT_SECRET`, `COOKIE_SECRET` | Generar al azar (`openssl rand -hex 32`). Distintos entre sí. |
-| `MAIL_FROM` | Mientras no haya dominio propio: una casilla de `garage360.cl` que ya tenga SPF y DKIM, por ejemplo `Cyprotech <no-reply@garage360.cl>`. |
-| `STORE_CORS` | `https://cypro.garage360.cl` |
-| `ADMIN_CORS`, `AUTH_CORS` | `https://cypro-api.garage360.cl` |
-| `BACKEND_PUBLIC_URL` | `https://cypro-api.garage360.cl` |
-| `STOREFRONT_URL` | `https://cypro.garage360.cl` |
+| `MAIL_FROM` | `Cyprotech <no-reply@cyprotech.cl>` (dominio verificado en Resend con SPF y DKIM). |
+| `STORE_CORS` | `https://cyprotech.cl` |
+| `ADMIN_CORS`, `AUTH_CORS` | `https://cyprotech.cl` |
+| `BACKEND_PUBLIC_URL` | `https://cyprotech.cl` |
+| `STOREFRONT_URL` | `https://cyprotech.cl` |
 
 Las demás (Intcomex, Flow, OpenFactura, SMTP) tienen valor por defecto seguro y se rellenan cuando lleguen las credenciales: `INTCOMEX_*`, `FLOW_*`, `OPENFACTURA_*`, `BILLING_EMISOR_*`, `SMTP_*`, `MAIL_FROM`, `SUPPORT_EMAIL`, `ALERT_EMAIL`. Marcarlas como secretas en Coolify.
 
-Dominio del servicio **backend**: `https://cypro-api.garage360.cl`, puerto 9000. Desplegar.
+El dominio de `cyprotech.cl` lo da el compose (etiquetas de Traefik). En Coolify el servicio `backend` puede conservar un dominio provisorio como respaldo. Desplegar.
 
 ### 2. Preparar la tienda (una sola vez)
 
@@ -63,7 +63,7 @@ npx medusa exec ./src/scripts/setup-chile.js                  # región Chile, I
 
 `setup-chile` **borra productos, categorías y despachos** para dejar la tienda limpia, por eso se niega a correr si ya existe la región Chile (salvo `SETUP_FORCE=true`).
 
-Después, en el admin (`https://cypro-api.garage360.cl/app`): *Settings → Publishable API Keys* y copiar la clave que ya viene creada (`pk_...`).
+Después, en el admin (`https://cyprotech.cl/admin`): *Settings → Publishable API Keys* y copiar la clave que ya viene creada (`pk_...`).
 
 ### 3. Tienda (aplicación con Dockerfile)
 
@@ -71,12 +71,12 @@ Nuevo recurso → Application → mismo repositorio → *Build Pack: Dockerfile*
 
 | Variable | Valor |
 | --- | --- |
-| `NEXT_PUBLIC_MEDUSA_BACKEND_URL` | `https://cypro-api.garage360.cl` |
+| `NEXT_PUBLIC_MEDUSA_BACKEND_URL` | `https://cyprotech.cl` |
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | la `pk_...` del paso anterior |
-| `NEXT_PUBLIC_BASE_URL` | `https://cypro.garage360.cl` |
+| `NEXT_PUBLIC_BASE_URL` | `https://cyprotech.cl` |
 | `NEXT_PUBLIC_DEFAULT_REGION` | `cl` |
 
-Puerto 8000. Dominio `https://cypro.garage360.cl`. Límite de memoria sugerido: 400 MB.
+Puerto 8000. Dominio `https://cyprotech.cl`. Límite de memoria sugerido: 400 MB.
 
 ### 4. Salir a vender
 

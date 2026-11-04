@@ -50,6 +50,32 @@ services:
         condition: service_healthy
     expose:
       - "9000"
+    # Dominio unico cyprotech.cl: la tienda (app aparte en Coolify) atiende la raiz y este backend
+    # solo las rutas de Medusa. Traefik da prioridad a la regla mas especifica, y aqui se fija una
+    # prioridad explicita para no depender del largo de la regla.
+    #   /app    interfaz del admin     /admin  API del admin (el admin vive en /app porque /admin es API)
+    #   /store  API de la tienda       /auth   inicio de sesion     /hooks  avisos de Flow
+    #   /static banners subidos        /health salud
+    # La ruta exacta /admin (sin nada mas) redirige a /app: es la direccion que se le da al equipo.
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cyprotech-medusa.rule=Host(`cyprotech.cl`) && (PathPrefix(`/app`) || PathPrefix(`/admin`) || PathPrefix(`/store`) || PathPrefix(`/auth`) || PathPrefix(`/hooks`) || PathPrefix(`/static`) || PathPrefix(`/health`))
+      - traefik.http.routers.cyprotech-medusa.priority=500
+      - traefik.http.routers.cyprotech-medusa.entryPoints=https
+      - traefik.http.routers.cyprotech-medusa.tls=true
+      - traefik.http.routers.cyprotech-medusa.tls.certresolver=letsencrypt
+      - traefik.http.routers.cyprotech-medusa.service=cyprotech-medusa
+      - traefik.http.services.cyprotech-medusa.loadbalancer.server.port=9000
+      - traefik.http.routers.cyprotech-admin-redirect.rule=Host(`cyprotech.cl`) && (Path(`/admin`) || Path(`/admin/`))
+      - traefik.http.routers.cyprotech-admin-redirect.priority=1000
+      - traefik.http.routers.cyprotech-admin-redirect.entryPoints=https
+      - traefik.http.routers.cyprotech-admin-redirect.tls=true
+      - traefik.http.routers.cyprotech-admin-redirect.tls.certresolver=letsencrypt
+      - traefik.http.routers.cyprotech-admin-redirect.middlewares=cyprotech-admin-to-app
+      - traefik.http.routers.cyprotech-admin-redirect.service=cyprotech-medusa
+      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.regex=^https://([^/]+)/admin/?$$
+      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.replacement=https://$${1}/app
+      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.permanent=false
     environment:
       NODE_ENV: production
       NODE_OPTIONS: --max-old-space-size=768
