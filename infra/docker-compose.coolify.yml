@@ -57,6 +57,7 @@ services:
     #   /store  API de la tienda       /auth   inicio de sesion     /hooks  avisos de Flow
     #   /static banners subidos        /health salud
     # La ruta exacta /admin (sin nada mas) redirige a /app: es la direccion que se le da al equipo.
+    # La regla de redireccion no usa el signo $ a proposito: Coolify lo duplica al escapar etiquetas.
     labels:
       - traefik.enable=true
       - traefik.http.routers.cyprotech-medusa.rule=Host(`cyprotech.cl`) && (PathPrefix(`/app`) || PathPrefix(`/admin`) || PathPrefix(`/store`) || PathPrefix(`/auth`) || PathPrefix(`/hooks`) || PathPrefix(`/static`) || PathPrefix(`/health`))
@@ -73,8 +74,8 @@ services:
       - traefik.http.routers.cyprotech-admin-redirect.tls.certresolver=letsencrypt
       - traefik.http.routers.cyprotech-admin-redirect.middlewares=cyprotech-admin-to-app
       - traefik.http.routers.cyprotech-admin-redirect.service=cyprotech-medusa
-      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.regex=^https://([^/]+)/admin/?$$
-      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.replacement=https://$${1}/app
+      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.regex=^https://cyprotech\.cl/admin/?\z
+      - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.replacement=https://cyprotech.cl/app
       - traefik.http.middlewares.cyprotech-admin-to-app.redirectregex.permanent=false
     environment:
       NODE_ENV: production
