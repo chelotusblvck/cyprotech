@@ -78,6 +78,15 @@ Nuevo recurso → Application → mismo repositorio → *Build Pack: Dockerfile*
 
 Puerto 8000. Dominio `https://cyprotech.cl`. Límite de memoria sugerido: 400 MB.
 
+### Cambio de dominio (hecho el 2026-11-04: garage360.cl a cyprotech.cl)
+
+- Cambiaron `STORE_CORS`, `ADMIN_CORS`, `AUTH_CORS`, `BACKEND_PUBLIC_URL`, `STOREFRONT_URL` (backend) y `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_BASE_URL` (tienda, hay que reconstruir). Flow arma sus URL de retorno y aviso en cada pago con esas variables, no hay nada que cambiar en su panel.
+- Las etiquetas de Traefik no deben llevar el signo `$`: Coolify lo duplica y la expresión deja de coincidir (la redirección de `/admin` dio 502 por eso).
+- Las imagenes de productos ya subidas guardan la URL completa del dominio anterior. Antes de retirar `cypro-api.garage360.cl`, en la terminal del contenedor `backend`:
+  `NODE_ENV=production npx medusa exec ./src/scripts/rewrite-media-host.js https://cypro-api.garage360.cl https://cyprotech.cl dry-run`
+  y, si la lista es la esperada, repetirlo sin `dry-run`.
+- `MAIL_FROM` y `SUPPORT_EMAIL` se cambian a `cyprotech.cl` solo cuando el dominio este verificado en Resend (SPF, DKIM, DMARC en Cloudflare).
+
 ### 4. Salir a vender
 
 1. Flow: `FLOW_ENV=sandbox` con las claves de sandbox, probar un pago completo; luego `production` con las reales.
