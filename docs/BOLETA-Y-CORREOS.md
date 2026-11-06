@@ -11,6 +11,41 @@ Cómo se emiten los documentos tributarios, cómo se avisa al cliente y qué fal
 
 Cada documento tiene una clave de idempotencia `<pedido>-<tipo>`, así un reintento nunca duplica un folio. Si el emisor falla, se reintenta hasta 8 veces y luego queda como **Falló**, con alerta en el dashboard y por correo (`ALERT_EMAIL`).
 
+## Conectar el servicio de boletas de Garage360 (reemplaza a OpenFactura)
+
+Garage360 emite sus boletas con un servicio propio, en su propio repositorio (`garage360-dte`), que atiende a todas sus tiendas.
+Esta tienda lo usa en lugar de OpenFactura con **dos variables** en el backend:
+
+| Variable | Qué es |
+| --- | --- |
+| `DTE_SERVICE_URL` | Dirección del servicio, por ejemplo `https://dte.garage360.cl`. |
+| `DTE_SERVICE_TOKEN` | El token de **esta tienda** (el servicio lo deduce de él; no hay que decir quién es). Secreto. |
+
+Si están las dos, **el servicio tiene prioridad sobre OpenFactura**. Las variables `BILLING_EMISOR_*` y `OPENFACTURA_*` dejan de
+hacer falta: los datos del emisor, los folios, el timbre y el envío al SII viven en el servicio. El flujo de pedidos, los
+reintentos, las alertas y el correo con el PDF son los mismos.
+
+Qué cambia respecto a OpenFactura:
+
+- **Solo boletas.** Si un cliente pide factura, esa emisión falla **sin reintento** y avisa: hay que emitirla a mano.
+- **Token del documento = `folio-código`.** El enlace de descarga del correo (`/documents/<token>`) lleva un código que no se puede
+  adivinar. El folio solo es consecutivo: nunca se acepta solo.
+- **Anulaciones.** Una boleta se anula con una Nota de Crédito electrónica. Garage360 está inscrita solo en boletas, así que la nota
+  se emite **a mano en el portal del SII** (*Servicios online → Boleta de ventas y servicios electrónica → Emitir nota de crédito
+  electrónica*; con Clave Tributaria o Clave Única y captcha). Al anular desde el dashboard (o al cancelar un pedido con
+  `BILLING_AUTO_CREDIT_NOTE=true`) la tienda registra la solicitud en el servicio, deja la nota en estado `manual_pending` y envía una
+  alerta con los pasos. Cuando la nota está emitida se registra con su folio:
+
+  `POST /admin/billing/documents/<id de la boleta>/credit-note/confirm` con `{ "folio": 7701, "date": "2026-11-07" }`
+
+  (la fecha es opcional). La boleta pasa a figurar anulada en el servicio, en su PDF y en su página pública de consulta.
+  Emitir la nota de crédito automáticamente exigiría inscribirse como facturador electrónico y certificar factura, nota de crédito y
+  nota de débito.
+- **Estado.** El servicio informa `FIRMADO`, `ENVIADO`, `ACEPTADO` o `RECHAZADO`; la tienda lo muestra como Pendiente, Aceptado o
+  Rechazado. Si el servicio no tiene folios (503 `sin_folios`) la emisión se reintenta y avisa.
+
+Contrato completo del servicio: `docs/integracion.md` del repositorio `garage360-dte`. Despliegue: `docs/despliegue-coolify.md` de ese repositorio.
+
 ## Conectar OpenFactura
 
 Variables en `apps/backend/.env`:

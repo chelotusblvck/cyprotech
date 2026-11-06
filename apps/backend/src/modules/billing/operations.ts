@@ -15,6 +15,8 @@ export type BillingDeps = {
   // Se llaman después de guardar el resultado. No deben lanzar: si el aviso falla, el documento ya existe.
   onIssued?: (documentId: string) => Promise<void>
   onFailed?: (documentId: string, error: string, retryable: boolean) => Promise<void>
+  // Proveedores sin notas de crédito por API: avisa que hay una nota por emitir a mano en el portal del SII.
+  onManualCreditNote?: (documentId: string, instructions: string) => Promise<void>
 }
 
 export type IssueResult = {
@@ -22,6 +24,9 @@ export type IssueResult = {
   documentId?: string
   folio?: number | null
   alreadyIssued?: boolean
+  // Anulación pendiente de que una persona emita la nota de crédito en el portal del SII.
+  manual?: boolean
+  instructions?: string
   error?: string
 }
 
@@ -174,6 +179,11 @@ export const issueCreditNote = async (
   if (already) {
     return { ok: true, alreadyIssued: true, documentId: already.id, folio: already.folio }
   }
+  // El servicio de boletas de Garage360 no emite notas de crédito por API: se registra la anulación y la nota se emite a
+  // mano en el portal del SII.
+  if (deps.api.requestCancellation) {
+    return requestManualCreditNote(deps, original, reason, now)
+  }
   if (!deps.emisor) {
     return { ok: false, error: "Faltan los datos tributarios del emisor (variables BILLING_EMISOR_*)." }
   }
@@ -223,6 +233,92 @@ export const issueCreditNote = async (
     const retryable = error instanceof OpenFacturaError ? error.retryable : true
     return failure(deps, row, error, retryable)
   }
+}
+
+type Original = Awaited<ReturnType<Service["listBillingDocuments"]>>[number]
+
+// Anulación sin nota de crédito por API. Una boleta electrónica se anula con una Nota de Crédito electrónica; Garage360
+// está inscrita solo en boletas, así que la emite una persona en el portal del SII (Servicios online > Boleta de ventas y
+// servicios electrónica > Emitir nota de crédito electrónica). Aquí se registra la solicitud en el servicio de boletas, se
+// deja un registro en la tienda y se avisa; después se confirma con el folio de la nota (confirmManualCreditNote).
+const requestManualCreditNote = async (
+  deps: BillingDeps,
+  original: Original,
+  reason: string,
+  now: Date,
+): Promise<IssueResult> => {
+  const [existing] = await deps.service.listBillingDocuments({ voids_document_id: original.id })
+  if (existing?.state === "manual_pending") {
+    return { ok: true, manual: true, documentId: existing.id, folio: null }
+  }
+
+  const row =
+    existing ??
+    (await deps.service.createBillingDocuments({
+      medusa_order_id: original.medusa_order_id,
+      kind: "nota_credito",
+      tipo_dte: DTE.NOTA_CREDITO,
+      state: "pending",
+      total: original.total,
+      receptor: original.receptor,
+      voids_document_id: original.id,
+      attempts: 0,
+      first_attempt_at: now,
+    }))
+  await deps.service.updateBillingDocuments({ id: row.id, attempts: (row.attempts ?? 0) + 1, last_attempt_at: now })
+
+  try {
+    const { instructions } = await deps.api.requestCancellation!(original.folio as number, reason)
+    await deps.service.updateBillingDocuments({ id: row.id, state: "manual_pending", last_error: null, retryable: false })
+    await deps.onManualCreditNote?.(row.id, instructions).catch(() => undefined)
+    return { ok: true, manual: true, documentId: row.id, folio: null, instructions }
+  } catch (error) {
+    const retryable = error instanceof OpenFacturaError ? error.retryable : true
+    return failure(deps, row, error, retryable)
+  }
+}
+
+// Registra la nota de crédito que una persona ya emitió en el portal del SII. A partir de ahí el documento figura anulado.
+// La nota la emite el propio SII, así que queda aceptada.
+export const confirmManualCreditNote = async (
+  deps: BillingDeps,
+  documentId: string,
+  creditNoteFolio: number,
+  date?: string,
+): Promise<IssueResult> => {
+  const now = deps.now ?? new Date()
+  if (!deps.api.confirmCancellation) {
+    return { ok: false, error: "Este proveedor emite las notas de crédito por API: no hay nada que confirmar." }
+  }
+  const [row] = await deps.service.listBillingDocuments({ voids_document_id: documentId })
+  const [original] = await deps.service.listBillingDocuments({ id: documentId })
+  if (!row || row.kind !== "nota_credito" || !original?.folio) {
+    return { ok: false, error: "Ese documento no tiene una anulación solicitada." }
+  }
+  if (row.state === "issued") {
+    return row.folio === creditNoteFolio
+      ? { ok: true, alreadyIssued: true, documentId: row.id, folio: row.folio }
+      : { ok: false, error: `Ese documento ya fue anulado con la nota de crédito ${row.folio}.` }
+  }
+  if (row.state !== "manual_pending") {
+    return { ok: false, error: "La anulación de ese documento no está pendiente." }
+  }
+
+  try {
+    await deps.api.confirmCancellation(original.folio, creditNoteFolio, date)
+  } catch (error) {
+    return { ok: false, error: (error as Error).message }
+  }
+  await deps.service.updateBillingDocuments({
+    id: row.id,
+    state: "issued",
+    folio: creditNoteFolio,
+    sii_status: "Aceptado",
+    emission_date: date ?? emissionDate(now),
+    issued_at: now,
+    last_error: null,
+  })
+  return { ok: true, documentId: row.id, folio: creditNoteFolio }
 }
 
 // Consulta al SII (vía OpenFactura) los documentos que aún no están aceptados. Un rechazo se avisa.

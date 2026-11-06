@@ -116,9 +116,26 @@ export const billingDeps = (container: MedusaContainer): BillingDeps => {
   return {
     service: container.resolve(BILLING_MODULE),
     api,
-    emisor: loadEmisor() ?? (api.isMock ? MOCK_EMISOR : null),
+    // Con el servicio de boletas, los datos del emisor viven allá: aquí solo se arma el pedido, y el servicio los ignora.
+    emisor: loadEmisor() ?? (api.isMock || api.issuerManagedRemotely ? MOCK_EMISOR : null),
     onIssued: async (documentId) => {
       await sendDocumentEmail(container, documentId)
+    },
+    onManualCreditNote: async (documentId, instructions) => {
+      const service: BillingModuleService = container.resolve(BILLING_MODULE)
+      const [credit] = await service.listBillingDocuments({ id: documentId })
+      const [original] = credit?.voids_document_id ? await service.listBillingDocuments({ id: credit.voids_document_id }) : []
+      await sendAlert(container, {
+        title: `Hay una boleta por anular en el portal del SII (pedido ${credit?.medusa_order_id ?? ""})`.trim(),
+        message:
+          "Una boleta debe anularse con una Nota de Crédito electrónica, que se emite a mano en el portal del SII. " +
+          "Cuando la emitas, regístrala en el dashboard con su folio.",
+        details: [
+          `Boleta N° ${original?.folio ?? "?"} por $${original?.total ?? "?"}`,
+          ...(instructions ? [`Pasos: ${instructions}`] : []),
+        ],
+        actionPath: "/cyprotech",
+      })
     },
     onFailed: async (documentId, error, retryable) => {
       const service: BillingModuleService = container.resolve(BILLING_MODULE)

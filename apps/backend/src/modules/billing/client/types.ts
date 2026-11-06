@@ -12,6 +12,14 @@ export type SiiStatus = "Aceptado" | "Pendiente" | "Rechazado" | "Aceptado con R
 
 export interface OpenFacturaApi {
   readonly isMock: boolean
+  // Verdadero si los datos tributarios del emisor y los folios viven en el proveedor (el servicio de boletas de Garage360)
+  // y no en las variables BILLING_EMISOR_* de esta tienda.
+  readonly issuerManagedRemotely?: boolean
+  // "manual": el proveedor no emite notas de crédito por API. La anulación se registra (requestCancellation) y la nota se
+  // emite a mano en el portal del SII; después se confirma con su folio (confirmCancellation).
+  readonly cancellation?: "manual"
+  requestCancellation?(folio: number, reason: string): Promise<{ instructions: string }>
+  confirmCancellation?(folio: number, creditNoteFolio: number, date?: string): Promise<void>
   // idempotencyKey: la misma clave nunca emite dos veces (OpenFactura la recuerda 24 horas).
   emit(request: EmissionRequest, idempotencyKey: string): Promise<EmissionResult>
   getStatus(token: string): Promise<SiiStatus>
