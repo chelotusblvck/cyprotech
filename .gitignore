@@ -9,6 +9,17 @@ dist
 infra/data
 static
 
+# Secretos del emisor de boletas (certificado digital, claves y folios CAF del SII). Nunca al repositorio.
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+caf*.xml
+CAF*.xml
+secrets/
+dte-secrets/
+
 # Carga manual de productos de Intcomex (salida del extractor)
 intcomex-manual*.json
 comparacion-precios*.csv
