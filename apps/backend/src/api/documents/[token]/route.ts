@@ -10,7 +10,11 @@ import { documentFileName } from "../../../modules/billing/types"
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const service: BillingModuleService = req.scope.resolve(BILLING_MODULE)
   const token = req.params.token
-  const [doc] = /^[0-9a-f]{32,128}$/i.test(token) ? await service.listBillingDocuments({ token, state: "issued" }) : []
+  // Token de OpenFactura (hexadecimal largo) o del servicio de boletas ("folio-codigo": el código no se puede adivinar; el
+  // folio solo sí, por eso nunca se acepta solo).
+  const [doc] = /^([0-9a-f]{32,128}|\d+-[0-9a-f]{16})$/i.test(token)
+    ? await service.listBillingDocuments({ token, state: "issued" })
+    : []
   if (!doc) {
     res.status(404).json({ message: "Documento no encontrado." })
     return
