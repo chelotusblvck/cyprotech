@@ -80,13 +80,20 @@ En *Control Cyprotech*: columna **Documento** por pedido (folio, PDF, estado SII
 
 ## Correos
 
-Plantillas en `src/lib/emails/`: `order-confirmed`, `order-shipped`, `order-delivered`, `document-ready`, `internal-alert`. Tema oscuro violeta de la marca, versión de texto plano, y pie con el crédito a Garage360. Para verlas sin crear pedidos: `npx medusa exec ./src/scripts/dev-preview-emails.ts` y abrir Mailpit (http://localhost:8025).
+Plantillas en `src/lib/emails/`: `order-confirmed`, `order-shipped`, `order-delivered`, `document-ready`, `internal-alert`, `staff-invite`. Tema oscuro violeta de la marca, versión de texto plano, y pie con el crédito a Garage360. Para verlas sin crear pedidos: `npx medusa exec ./src/scripts/dev-preview-emails.ts` y abrir Mailpit (http://localhost:8025).
 
 Variables SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `SUPPORT_EMAIL`, `ALERT_EMAIL`.
 
 - En desarrollo, sin `SMTP_HOST`, todo va a Mailpit (`127.0.0.1:1025`; no usar `localhost`, resuelve a IPv6).
 - En producción sin `SMTP_HOST` **no se envía nada** y el dashboard lo marca como alerta crítica.
 - Un fallo de correo nunca interrumpe un pedido, un pago ni una emisión.
+
+### Invitar administradores
+
+Settings > Users > Invite en el admin (`/app`). Medusa crea la invitación pero no envía correo por sí solo: el suscriptor `src/subscribers/staff-invite-email.ts` escucha `invite.created` e `invite.resent` y manda la plantilla `staff-invite` por el SMTP, con un enlace `BACKEND_PUBLIC_URL/app/invite?token=...` donde la persona crea su propia clave (el enlace es de un solo uso y vence a los 7 días; *Resend* en la invitación genera uno nuevo).
+
+- Si el correo no llega (SMTP caído, remitente sin verificar), la invitación sigue válida: en la lista de invitaciones, menú `...` > *Copy invite link*, y se entrega el enlace por un canal privado.
+- El correo viaja desde `MAIL_FROM`; con el dominio sin verificar en Resend puede caer en spam o rebotar.
 
 ### Antes de producción
 

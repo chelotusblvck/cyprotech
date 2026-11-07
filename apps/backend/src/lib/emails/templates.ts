@@ -83,6 +83,14 @@ export type AlertEmailData = {
   actionUrl?: string
 }
 
+export type StaffInviteEmailData = {
+  brand?: Partial<Brand>
+  // Enlace de un solo uso que abre la pantalla donde la persona crea su clave.
+  inviteUrl: string
+  // Días de vigencia que se le informan a quien recibe la invitación.
+  validDays?: number
+}
+
 export type RenderedEmail = { subject: string; html: string; text: string }
 
 const STEPS = ["Pago confirmado", "Preparando", "En camino", "Entregado"]
@@ -431,7 +439,49 @@ export const renderInternalAlert = (data: AlertEmailData): RenderedEmail => {
   }
 }
 
+// Invitación al panel de administración: la persona abre el enlace y crea su propia clave.
+export const renderStaffInvite = (data: StaffInviteEmailData): RenderedEmail => {
+  const brand = brandOf(data.brand)
+  const validDays = data.validDays ?? 7
+  const body = [
+    spacer(34),
+    row(
+      `${label("Panel de administración", COLORS.cyan)}<div style="height:12px;line-height:12px;font-size:1px">&nbsp;</div>${heading("Te invitaron a administrar Cyprotech")}<div style="height:14px;line-height:14px;font-size:1px">&nbsp;</div>${paragraph(
+        "Crea tu clave con el botón de abajo y entra al panel de la tienda. Solo tú vas a conocerla.",
+      )}`,
+    ),
+    gap(28),
+    row(button("Crear mi clave", data.inviteUrl)),
+    gap(24),
+    row(
+      panel(
+        `${label("Antes de entrar")}<div style="padding-top:10px;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.65;color:${COLORS.muted}">El enlace sirve una sola vez y vence en ${validDays} días. Es personal: no lo reenvíes, porque da acceso de administrador. Si no esperabas esta invitación, ignora este correo.</div>`,
+      ),
+    ),
+    gap(40),
+  ].join("")
+
+  return {
+    subject: "Te invitaron al panel de Cyprotech",
+    html: layout({
+      preheader: "Crea tu clave para entrar al panel de administración.",
+      title: "Invitación al panel de Cyprotech",
+      body,
+      brand,
+    }),
+    text: [
+      "Te invitaron a administrar Cyprotech.",
+      "",
+      `Crea tu clave aquí: ${data.inviteUrl}`,
+      "",
+      `El enlace sirve una sola vez y vence en ${validDays} días. Es personal: no lo reenvíes.`,
+      "Si no esperabas esta invitación, ignora este correo.",
+    ].join("\n"),
+  }
+}
+
 export const TEMPLATES = {
+  "staff-invite": renderStaffInvite,
   "order-confirmed": renderOrderConfirmed,
   "order-awaiting-transfer": renderOrderAwaitingTransfer,
   "order-shipped": renderOrderShipped,

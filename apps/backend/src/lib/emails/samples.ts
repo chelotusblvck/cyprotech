@@ -1,4 +1,11 @@
-import type { AlertEmailData, DocumentEmailData, OrderEmailData, TemplateName, TransferEmailData } from "./templates"
+import type {
+  AlertEmailData,
+  DocumentEmailData,
+  OrderEmailData,
+  StaffInviteEmailData,
+  TemplateName,
+  TransferEmailData,
+} from "./templates"
 
 // Datos de ejemplo para previsualizar los correos (script de vista previa y envío de prueba del dashboard).
 export const sampleOrder = (storefrontUrl = "http://localhost:8000"): OrderEmailData => ({
@@ -65,8 +72,15 @@ export const sampleAlert = (): AlertEmailData => ({
   actionUrl: "http://localhost:9000/app/cyprotech",
 })
 
+export const sampleInvite = (): StaffInviteEmailData => ({
+  inviteUrl: "http://localhost:9000/app/invite?token=ejemplo",
+  validDays: 7,
+})
+
 export const sampleFor = (template: TemplateName, storefrontUrl?: string): unknown => {
   switch (template) {
+    case "staff-invite":
+      return sampleInvite()
     case "document-ready":
       return sampleDocument(storefrontUrl)
     case "order-awaiting-transfer":
