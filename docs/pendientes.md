@@ -1,38 +1,60 @@
-# Pendientes (guardado 2026-10-26)
+# Pendientes (actualizado 2026-11-07, noche)
 
-Produccion corre `main` (commit ac4e066, merge del PR #1): transferencia directa, filtros Marca y Solo gaming,
-despacho sincronizado, correo por Resend. Probado de punta a punta con pedidos de prueba #2 y #3.
+## Estado al cierre del 2026-11-07
+- Despliegue con imagenes de GitHub Actions (GHCR): el VPS ya no compila. Deploy del backend ~2 min, de la tienda ~15 s.
+- Tienda en `cyprotech.cl` (app `cyprotech-storefront`, Docker Image) y backend `cyprotech-core` (compose con `image:`).
+- Correo por SMTP de Resend funcionando (clave nueva cargada). Invitaciones al admin por correo (suscriptor `staff-invite-email`).
+- Boletas electronicas automaticas en produccion: servicio `garage360-dte` en `dte.garage360.cl` con ambiente `produccion`,
+  resolucion 99 del 2014-10-21, CAF de 100 folios. `BILLING_AUTO_ISSUE=true`. Verificado con el pedido real #4
+  (transferencia, $9.029): al capturar el pago salio la Boleta N 1, con PDF y correo de confirmacion.
+- Cuenta `marcelo@cyprotech.cl` creada en el admin. Dolar del panel al dia.
 
-## Para retomar primero: boleta electronica
-- Cargar en Coolify (backend, variable por variable, NUNCA con Developer View): `BILLING_EMISOR_RUT` (78.531.895-1) y
-  `BILLING_EMISOR_RAZON_SOCIAL` (Inversiones y Desarrollos Tecnologicos Garage360 SpA) si el emisor es esa empresa, mas
-  `BILLING_EMISOR_GIRO`, `BILLING_EMISOR_ACTECO`, `BILLING_EMISOR_DIRECCION`, `BILLING_EMISOR_COMUNA`,
-  `BILLING_EMISOR_SUCURSAL` (si aplica) y `BILLING_EMISOR_CORREO`. Datos del inicio de actividades del SII.
-- API key de OpenFactura (`OPENFACTURA_API_KEY`, secreto; `OPENFACTURA_ENV` dev o prod). Sin ella la boleta queda simulada.
-- Despues: Redeploy del backend y "Reintentar" en el pedido #3 del panel Control Cyprotech.
+## Para finalizar manana (2026-11-08)
 
-## Operacion y limpieza
-- Antes de cada deploy: `docker builder prune -af` en el VPS (Coolify > Terminal > localhost). Disco al 46% tras la limpieza de hoy.
-  NO usar `docker system prune -a --volumes` ni `docker volume prune`.
-- Los pedidos #2 y #3 son de prueba (cliente Prueba E2E). El #2 se cancela solo a las 48 h; el #3 ya esta capturado.
-- Dolar del panel con fecha 2026-10-22: revisar que el job de tipo de cambio actualice.
-- Producto "HIK Monitor" sin marca: si es Hikvision, agregar la regla en `src/lib/catalog/brands.ts` y ejecutar
-  `classify-products.js reindex`.
-- Credenciales de Intcomex (API Key y Access Key): sigue en modo simulado.
-- Cuando se compre cyprotech.cl: verificarlo en Resend (SPF y DKIM) y cambiar `MAIL_FROM` y `SUPPORT_EMAIL`.
+### Boletas y SII
+1. Revisar que la Boleta N 1 pase de "Pendiente" a "Aceptado" en Control Cyprotech (la consulta corre cada 10 min).
+2. Respaldo del volumen `/data` de `garage360-dte` (folios y boletas firmadas, se conservan 6 anos): tarea programada en
+   Coolify o cron en el VPS con `node /app/src/respaldo.ts /data/respaldos 14`, mas copia FUERA del VPS. Guardar aparte,
+   cifrado, el certificado, su clave y el CAF de produccion (no se recupera si se pierde).
+3. Contador: confirmar que Garage360 tiene inscrita la actividad de comercio (por ejemplo 479100). Hoy solo tiene giros de software.
+4. Pedidos de prueba #1, #2 y #3: NO pulsar "Reintentar" en el #3 (emitiria una boleta real). Limpiarlos antes de promocionar.
+5. Anulaciones: la nota de credito se emite a mano en el portal del SII; falta un boton en el dashboard para confirmar el folio
+   (hoy solo existe `POST /admin/billing/documents/:id/credit-note/confirm`).
+6. Boletas sobre 135 UF: enviar `medioPago` (Flow = 2, transferencia = 3) desde la tienda y definir `DTE_VALOR_UF` en el servicio.
 
-## Datos en produccion (hacer juntos)
-- Tarea 17: despublicar los 5 SKU `-B1`. Tarea 18: reimportar imagenes grandes. Tarea 19: limpiar titulos (AC000MSI29 con caracteres rotos).
-- Comparador de precios: 3 de 73 productos con oferta; 2 estan bajo nuestro piso (G915 X TKL y mousepad G640). Aplicar precios (tarea 23) solo con tu aprobacion del CSV (apps/backend/comparacion-precios.csv, local).
+### Cuentas y seguridad
+7. Invitar a `leonardo@cyprotech.cl` (Settings > Users > Invite) y entregarle el enlace; debe abrirlo en ventana de incognito.
+8. Correo de "olvide mi clave" (suscriptor de `auth.password_reset`, mismo patron que `staff-invite`). Con eso rotar la clave de
+   Marcelo, que quedo visible en una captura.
+9. Probar que `ALERT_EMAIL` (alertas@cyprotech.cl) recibe las alertas internas.
+10. Revisar los logs del backend tras cualquier cambio de SMTP: buscar "No se pudo enviar el correo".
 
-## Plan completo
-- docs/plan-mejoras-tienda.md. Faltan: categorias nuevas (26, 30, 31), bundles (32), carrusel de marcas (37), medios de pago con logos (38), regla de marcas en portada (40).
-- Completar los `[COMPLETAR]` de las paginas informativas (CONTACT en apps/storefront/src/lib/info-pages.ts) y pasar lo legal por revision.
+### Infraestructura
+11. Limite de memoria de 400 MB en la app `cyprotech-storefront`.
+12. Deploy automatico: token de la API de Coolify; secreto `COOLIFY_TOKEN` y variables `COOLIFY_URL`,
+    `COOLIFY_BACKEND_UUID`, `COOLIFY_STOREFRONT_UUID` en GitHub (los workflows ya los usan si existen).
+13. Borrar la app vieja `cyprotech-store` (detenida, solo para rollback) cuando se confirme estabilidad.
+14. `cypro.garage360.cl` y `cypro-api.garage360.cl` dan 503: retirarlos. Antes, confirmar que se corrio
+    `rewrite-media-host.js https://cypro-api.garage360.cl https://cyprotech.cl` (dry-run primero) y que `www` redirige al apex.
+15. Respaldo diario de Postgres: existe el cron de las 03:30 en el VPS; falta la copia fuera del VPS.
 
-## Datos que debes entregar
-- Correos y telefonos de contacto, horario, domicilio; kit de marca de Intcomex; lista de marcas gaming y emergentes a impulsar; datos del emisor de la boleta (arriba).
+### Negocio y tienda
+16. Intcomex en modo simulado: cargar `INTCOMEX_API_KEY` e `INTCOMEX_ACCESS_KEY` (secretas, en Coolify) y pedir que registren la
+    IP `216.185.51.16`. Luego lanzar las sincronizaciones (catalogo, precios, inventario) desde Control Cyprotech.
+17. Flow a produccion: `FLOW_ENV=production` con claves reales, probar un pago completo, `enable-flow.js`; revisar el pie
+    "Pagos procesados por Flow".
+18. Paginas informativas con `[COMPLETAR]` (`apps/storefront/src/lib/info-pages.ts`) y revision legal (terminos, devoluciones, garantia).
+19. Catalogo: despublicar los 5 SKU `-B1` (tarea 17), reimportar imagenes grandes (18), titulo roto de AC000MSI29 (19), marca de
+    "HIK Monitor". Comparador de precios: aplicar solo con aprobacion del CSV.
+20. Plan de mejoras (`docs/plan-mejoras-tienda.md`): categorias nuevas, bundles, carrusel de marcas, logos de medios de pago, marcas en portada.
 
 ## Trampas conocidas
-- Coolify: Developer View deja los secretos bloqueados sin Build time (el compose ya lo tolera). Solo se pasan al contenedor las variables declaradas en `infra/docker-compose.coolify.yml`.
+- Coolify: no usar "Developer View" para editar variables. Chrome autocompleta los campos Comment y Value del dialogo: borrarlos.
+- Coolify, compose: no hay "Restart"; "Redeploy" aplica las variables nuevas ("Changes pending" = aun no aplicado).
+- Coolify: al quitar un dominio o detener una app, desmarcar "delete DNS record" y "Docker cleanup"; detener pide doble confirmacion.
+- Coolify > Persistent Storage > Files muestra el contenido de los archivos montados, incluida la clave privada del firmante.
+- Toda `NEXT_PUBLIC_*` de la tienda se incrusta al compilar: debe estar como ARG en el Dockerfile, en `build-args` del workflow
+  y como variable del repositorio en GitHub.
 - Medusa admite UN solo handler de `completeCartWorkflow.hooks.validate`. El build descarta carpetas llamadas `test`.
+- Un enlace de invitacion abierto con la sesion de admin iniciada falla ("already authenticated"): usar incognito.
 - Scripts en produccion son `.js`: `NODE_ENV=production npx medusa exec ./src/scripts/<nombre>.js`.
