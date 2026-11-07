@@ -8,7 +8,8 @@ WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/backend/package.json apps/backend/package.json
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \n    pnpm install --frozen-lockfile --filter @cyprotech/backend...
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile --filter @cyprotech/backend...
 
 COPY apps/backend apps/backend
 WORKDIR /repo/apps/backend
@@ -20,12 +21,13 @@ RUN NODE_OPTIONS=--max-old-space-size=1536 pnpm exec medusa build
 # El build deja un proyecto autónomo en .medusa/server (con el admin en public/admin).
 FROM node:22-bookworm-slim AS run
 RUN corepack enable && corepack prepare pnpm@12.14.0 --activate
-ENV npm_config_store_dir=/pnpm/store
-ENV NODE_ENV=production
+ENV NODE_ENV=production npm_config_store_dir=/pnpm/store
 WORKDIR /app
 COPY --from=build /repo/apps/backend/.medusa/server ./
 COPY --from=build /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/.npmrc ./
-X    && pnpm install --prod --no-frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    node -e "const f='package.json',p=require('./'+f);delete p.packageManager;require('fs').writeFileSync(f,JSON.stringify(p,null,2))" \
+    && pnpm install --prod --no-frozen-lockfile
 COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # /app/static guarda los banners subidos desde el admin: se monta como volumen.
 RUN mkdir -p /app/static && chmod +x /usr/local/bin/docker-entrypoint.sh && chown -R node:node /app
