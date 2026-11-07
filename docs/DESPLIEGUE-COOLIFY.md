@@ -102,3 +102,25 @@ Puerto 8000. Dominio `https://cyprotech.cl`. Límite de memoria sugerido: 400 MB
 - **Panel de Coolify expuesto.** El puerto 8000 del VPS está abierto a internet y sirve el panel. Conviene cerrarlo y entrar por un dominio con HTTPS, o limitarlo por IP.
 - **Disco.** La caché de builds vuelve a crecer con cada despliegue. Programar `docker builder prune -af --filter until=72h` semanal.
 - **Zona horaria de los jobs.** Los trabajos programados (catálogo 03:00, precios 03:30) usan la hora del contenedor (UTC). Es consistente, pero no coincide con la hora de Chile.
+
+## Despliegue con imágenes de GitHub Actions (rama `optimizar-despliegue`)
+
+Las imágenes se construyen en GitHub y el VPS solo las descarga: no hay compilación en el servidor, ni picos de RAM/CPU, ni caché de builds que crezca en disco.
+
+- `.github/workflows/build-backend.yml` y `build-storefront.yml` se disparan al hacer push a `main` **solo si cambió esa app** (o `packages/`, el lockfile). Publican `ghcr.io/chelotusblvck/cyprotech-backend` y `cyprotech-storefront` con las etiquetas `latest` y el SHA del commit (el SHA sirve para volver atrás).
+- Si existen el secreto `COOLIFY_TOKEN` y las variables `COOLIFY_URL` y `COOLIFY_BACKEND_UUID` / `COOLIFY_STOREFRONT_UUID`, el workflow avisa a Coolify al terminar. Si no existen, ese paso se omite y se despliega a mano desde Coolify.
+
+### Pasos de puesta en marcha (una sola vez)
+
+1. **GitHub → Settings → Secrets and variables → Actions → Variables:** `NEXT_PUBLIC_MEDUSA_BACKEND_URL` (`https://cyprotech.cl`), `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` (la `pk_...`), `NEXT_PUBLIC_BASE_URL` (`https://cyprotech.cl`), `NEXT_PUBLIC_DEFAULT_REGION` (`cl`). No son secretas: acaban dentro del JS público de la tienda.
+2. Ejecutar a mano los dos workflows (Actions → *Run workflow*) para publicar las primeras imágenes.
+3. **Paquetes privados:** en el VPS, `docker login ghcr.io -u chelotusblvck` con un token clásico con permiso `read:packages` (o hacer públicos los paquetes: no contienen secretos, esos entran por variables de Coolify en runtime). Coolify también permite cargar el registro en *Keys & Tokens*.
+4. **Tienda en Coolify:** cambiar la aplicación a *Docker Image* `ghcr.io/chelotusblvck/cyprotech-storefront:latest`, puerto 8000, mismo dominio. Las `NEXT_PUBLIC_*` de Coolify ya no hacen falta (van en la imagen).
+5. **Backend en Coolify:** el compose ya usa `image:` (variable opcional `BACKEND_IMAGE` para fijar una etiqueta de SHA). Redesplegar.
+6. Opcional, para el despliegue automático: token de la API de Coolify (*Keys & Tokens → API tokens*), UUID de cada recurso, y cargarlos como `COOLIFY_TOKEN` (secreto) y `COOLIFY_URL`, `COOLIFY_BACKEND_UUID`, `COOLIFY_STOREFRONT_UUID` (variables). En Coolify, desactivar el *auto deploy* por push para que no compile ni despliegue dos veces.
+
+### Cuidados
+
+- Cambiar `NEXT_PUBLIC_*` obliga a reconstruir la tienda (ejecutar su workflow).
+- Revertir: desplegar una etiqueta anterior (`BACKEND_IMAGE=...:<sha>`) o restaurar `build:` en el compose.
+- Los `Dockerfile` usan cachés de BuildKit (`--mount=type=cache`) para el store de pnpm y la caché de Next; sirven también si algún día se vuelve a construir en el VPS.

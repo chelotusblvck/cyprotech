@@ -1,0 +1,55 @@
+name: Imagen backend
+
+# Construye la imagen en GitHub (no en el VPS), la publica en GHCR y avisa a Coolify.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/backend/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".npmrc"
+      - ".github/workflows/build-backend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: build-backend
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_UUID: ${{ vars.COOLIFY_BACKEND_UUID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/cyprotech-backend:latest
+            ghcr.io/${{ github.repository_owner }}/cyprotech-backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+      # Opcional: solo se ejecuta si existen el token y el UUID de Coolify.
+      - name: Desplegar en Coolify
+        if: ${{ env.COOLIFY_TOKEN != '' && env.COOLIFY_UUID != '' && env.COOLIFY_URL != '' }}
+        run: |
+          curl --fail --silent --show-error -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_UUID&force=false"

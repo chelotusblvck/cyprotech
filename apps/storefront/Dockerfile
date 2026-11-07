@@ -1,12 +1,14 @@
+# syntax=docker/dockerfile:1
 # Tienda Next.js. Contexto de build: la raíz del repositorio.
 # Las variables NEXT_PUBLIC_* se incrustan al compilar: llegan como build args (Coolify las pasa solo).
 FROM node:22-bookworm-slim AS build
 RUN corepack enable && corepack prepare pnpm@12.14.0 --activate
+ENV npm_config_store_dir=/pnpm/store
 WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY apps/storefront/package.json apps/storefront/package.json
-RUN pnpm install --frozen-lockfile --filter @cyprotech/storefront...
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \n    pnpm install --frozen-lockfile --filter @cyprotech/storefront...
 
 COPY apps/storefront apps/storefront
 WORKDIR /repo/apps/storefront
@@ -22,7 +24,8 @@ ENV NEXT_PUBLIC_MEDUSA_BACKEND_URL=$NEXT_PUBLIC_MEDUSA_BACKEND_URL \
     NEXT_PUBLIC_DEFAULT_REGION=$NEXT_PUBLIC_DEFAULT_REGION \
     NEXT_TELEMETRY_DISABLED=1 \
     NEXT_OUTPUT=standalone
-RUN NODE_OPTIONS=--max-old-space-size=1536 pnpm exec next build
+# La caché de Next (webpack/SWC) se conserva entre builds: los siguientes recompilan solo lo cambiado.
+RUN --mount=type=cache,id=next-cache,target=/repo/apps/storefront/.next/cache \n    NODE_OPTIONS=--max-old-space-size=1536 pnpm exec next build
 
 FROM node:22-bookworm-slim AS run
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=8000 HOSTNAME=0.0.0.0

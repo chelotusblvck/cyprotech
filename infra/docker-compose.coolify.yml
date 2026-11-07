@@ -38,9 +38,10 @@ services:
       retries: 12
 
   backend:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
+    # Imagen construida por GitHub Actions (.github/workflows/build-backend.yml): el VPS ya no compila.
+    # Para volver a construir en el VPS, restaurar `build: {context: ., dockerfile: apps/backend/Dockerfile}`.
+    image: ${BACKEND_IMAGE:-ghcr.io/chelotusblvck/cyprotech-backend:latest}
+    pull_policy: always
     restart: unless-stopped
     mem_limit: 1g
     depends_on:
