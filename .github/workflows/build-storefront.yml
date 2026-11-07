@@ -47,6 +47,8 @@ jobs:
             NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}
             NEXT_PUBLIC_DEFAULT_REGION=${{ vars.NEXT_PUBLIC_DEFAULT_REGION || 'cl' }}
+            NEXT_PUBLIC_TRANSFER_ENABLED=${{ vars.NEXT_PUBLIC_TRANSFER_ENABLED || 'false' }}
+            NEXT_PUBLIC_TRANSFER_DISCOUNT_PERCENT=${{ vars.NEXT_PUBLIC_TRANSFER_DISCOUNT_PERCENT || '2.5' }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/cyprotech-storefront:latest
             ghcr.io/${{ github.repository_owner }}/cyprotech-storefront:${{ github.sha }}
