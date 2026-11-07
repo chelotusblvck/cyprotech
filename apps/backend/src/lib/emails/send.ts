@@ -36,7 +36,28 @@ export const sendEmail = async (
   }
 }
 
-export const loadOrderForEmail = async (container: MedusaContainer, orderId: string): Promise<OrderForEmail> => {
+// Enlace del admin (vive en /app) donde la persona invitada crea su clave.
+export const inviteUrlFor = (token: string) =>
+  `${loadFlowUrls().backendUrl}/app/invite?token=${encodeURIComponent(token)}`
+
+// Correo de invitación al panel. Medusa crea la invitación pero no envía nada por su cuenta: este
+// envío sale por el proveedor SMTP. Cubre invitaciones nuevas y reenviadas (la reenviada trae token nuevo).
+export const sendStaffInvite = async (container: MedusaContainer, inviteId: string): Promise<boolean> => {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
+  const users = container.resolve(Modules.USER)
+  const invite = await users.retrieveInvite(inviteId).catch(() => null)
+  if (!invite || invite.accepted || !invite.email || !invite.token) {
+    logger.warn(`Invitación ${inviteId}: no se envía correo (no existe, ya fue aceptada o no tiene token)`)
+    return false
+  }
+  return sendEmail(container, {
+    to: invite.email,
+    template: "staff-invite",
+    data: { brand: brandOverrides(), inviteUrl: inviteUrlFor(invite.token) },
+  })
+}
+
+export const loadOrderForEmail =async (container: MedusaContainer, orderId: string): Promise<OrderForEmail> => {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const {
     data: [order],
