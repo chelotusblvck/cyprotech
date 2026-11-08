@@ -12,6 +12,13 @@
 ## Para finalizar manana (2026-11-08)
 
 ### Boletas y SII
+0. **URGENTE: Boleta N 1 RECHAZADA por el SII** (envio 24532940157, RSC, `LSX-00222 "INVERSIONES Y DESARROLLOS TECNOLOGICOS G" is too long`).
+   Es el `<RS>` del CAF (40 caracteres, con "O" acentuada); hipotesis: el servidor del SII la cuenta como 2 (41 > 40). El corte del nombre
+   del proveedor (PR #4) no era la causa. Hecho el 2026-11-08: PR #5 fusionado en garage360-dte (`DTE_CODIFICACION_ENVIO`, `/v1/admin/refirmar`
+   sin cambios), variable `DTE_CODIFICACION_ENVIO=UTF-8` cargada y redeploy en Coolify, `POST /v1/admin/refirmar {"folio":1}` -> 200.
+   **Falta:** `POST /v1/admin/enviar` (con `curl.exe` y el token admin, ver README del servicio), esperar y revisar el resultado
+   (`/v1/admin/consultar` o Control Cyprotech). Si vuelve a salir LSX-00222, descartar la hipotesis y pedir al SII un CAF nuevo con la razon
+   social corta. Mientras tanto, las compras nuevas no pueden emitir boleta valida (revisar `BILLING_AUTO_ISSUE` y el CAF).
 1. Revisar que la Boleta N 1 pase de "Pendiente" a "Aceptado" en Control Cyprotech (la consulta corre cada 10 min).
 2. Respaldo del volumen `/data` de `garage360-dte` (folios y boletas firmadas, se conservan 6 anos): tarea programada en
    Coolify o cron en el VPS con `node /app/src/respaldo.ts /data/respaldos 14`, mas copia FUERA del VPS. Guardar aparte,
