@@ -82,3 +82,56 @@ describe("resolveUsdClp", () => {
     ).rejects.toThrow(/no hay uno guardado/)
   })
 })
+
+describe("resolveUsdClp: control contra errores de precio", () => {
+  const yesterday = { date: "2026-10-19", rate: 950, source: "mindicador.cl" }
+
+  it("descarta un valor del dólar muy distinto del último guardado y sigue con el guardado", async () => {
+    const store = makeStore([yesterday])
+    const result = await resolveUsdClp(store, {
+      env: {} as NodeJS.ProcessEnv,
+      now,
+      fetchQuote: async () => ({ rate: 9.5, date: "2026-10-20", source: "mindicador.cl" }),
+    })
+    expect(result).toMatchObject({ rate: 950, stale: true, rejectedRate: 9.5 })
+    expect(store.createIntcomexFxRates).not.toHaveBeenCalled()
+  })
+
+  it("acepta y guarda una variación normal", async () => {
+    const store = makeStore([yesterday])
+    const result = await resolveUsdClp(store, {
+      env: {} as NodeJS.ProcessEnv,
+      now,
+      fetchQuote: async () => ({ rate: 965, date: "2026-10-20", source: "mindicador.cl" }),
+    })
+    expect(result).toMatchObject({ rate: 965, stale: false })
+    expect(result.rejectedRate).toBeUndefined()
+    expect(store.createIntcomexFxRates).toHaveBeenCalledTimes(1)
+  })
+
+  it("el primer valor nunca se descarta (no hay con qué compararlo)", async () => {
+    const store = makeStore()
+    const result = await resolveUsdClp(store, {
+      env: {} as NodeJS.ProcessEnv,
+      now,
+      fetchQuote: async () => ({ rate: 940, date: "2026-10-20", source: "mindicador.cl" }),
+    })
+    expect(result).toMatchObject({ rate: 940, stale: false })
+  })
+
+  it("el límite se puede cambiar con FX_MAX_DEVIATION_PERCENT", async () => {
+    const store = makeStore([yesterday])
+    const result = await resolveUsdClp(store, {
+      env: { FX_MAX_DEVIATION_PERCENT: "20" } as unknown as NodeJS.ProcessEnv,
+      now,
+      fetchQuote: async () => ({ rate: 1100, date: "2026-10-20", source: "mindicador.cl" }),
+    })
+    expect(result).toMatchObject({ rate: 1100, stale: false })
+  })
+
+  it("un salto real se puede fijar a mano con el override, que no se controla", async () => {
+    const store = makeStore([yesterday])
+    const result = await resolveUsdClp(store, { env: { FX_USD_CLP_OVERRIDE: "1100" } as unknown as NodeJS.ProcessEnv, now })
+    expect(result).toMatchObject({ rate: 1100, source: "override" })
+  })
+})

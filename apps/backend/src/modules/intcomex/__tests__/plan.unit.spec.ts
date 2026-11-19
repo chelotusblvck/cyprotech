@@ -180,3 +180,45 @@ describe("planCatalogSync con el catálogo simulado", () => {
     expect(second.toDeactivate).toEqual([])
   })
 })
+
+describe("planRowChange: control contra errores de precio", () => {
+  const guarded: SyncContext = { ...context, priceGuard: { maxDropPercent: 30, maxRisePercent: 60 } }
+
+  it("un costo que se desploma no cambia el precio publicado y se informa como retenido", () => {
+    const held: unknown[] = []
+    // Costo 100 -> 5 USD (error de dato): el precio nuevo es ~5 % del publicado.
+    const change = planRowChange(row(), { sku: "S1", costNet: 5, currency: "USD", stock: 10 }, guarded, { onHeld: (h) => held.push(h) })
+    expect(change?.patch.public_price).toBeUndefined()
+    expect(change?.variantPrice).toBeUndefined()
+    expect(change?.patch.cost_net).toBe(5)
+    expect(held).toHaveLength(1)
+    expect(held[0]).toMatchObject({ sku: "S1", from: 124360, reason: "drop" })
+  })
+
+  it("un tipo de cambio absurdo no sube los precios", () => {
+    const held: unknown[] = []
+    const change = planRowChange(row(), { sku: "S1", costNet: 100, currency: "USD", stock: 10 }, { ...guarded, usdClp: 9500 }, { onHeld: (h) => held.push(h) })
+    expect(change).toBeNull()
+    expect(held).toHaveLength(1)
+    expect(held[0]).toMatchObject({ reason: "rise" })
+  })
+
+  it("un cambio normal se aplica aunque el control esté activo", () => {
+    const held: unknown[] = []
+    const change = planRowChange(row(), { sku: "S1", costNet: 110, currency: "USD", stock: 10 }, guarded, { onHeld: (h) => held.push(h) })
+    expect(change?.patch.public_price).toBeGreaterThan(124360)
+    expect(change?.variantPrice).toBeDefined()
+    expect(held).toHaveLength(0)
+  })
+
+  it("sin priceGuard (corrida aceptada a mano después de revisar) aplica el cambio grande", () => {
+    const change = planRowChange(row(), { sku: "S1", costNet: 5, currency: "USD", stock: 10 }, context)
+    expect(change?.patch.public_price).toBeLessThan(124360 * 0.1)
+  })
+
+  it("el stock se actualiza aunque el precio quede retenido", () => {
+    const change = planRowChange(row(), { sku: "S1", costNet: 5, currency: "USD", stock: 4 }, guarded)
+    expect(change?.patch.stock).toBe(4)
+    expect(change?.patch.public_price).toBeUndefined()
+  })
+})
