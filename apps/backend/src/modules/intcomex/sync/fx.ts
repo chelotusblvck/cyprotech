@@ -12,6 +12,8 @@ type FxStore = {
 export type ResolvedFx = FxQuote & {
   // True si no se pudo traer el valor de hoy y se usa el último guardado.
   stale: boolean
+  // Valor que trajo la red y se descartó por salirse de rango (ver FX_MAX_DEVIATION_PERCENT); se usa el último guardado.
+  rejectedRate?: number
 }
 
 // Orden de preferencia: override manual (FX_USD_CLP_OVERRIDE), valor de hoy guardado,
@@ -22,11 +24,15 @@ export const resolveUsdClp = async (
     env?: NodeJS.ProcessEnv
     now?: Date
     fetchQuote?: () => Promise<FxQuote>
+    // Variación máxima aceptada contra el último valor guardado, en porcentaje.
+    maxDeviationPercent?: number
   } = {},
 ): Promise<ResolvedFx> => {
   const env = options.env ?? process.env
   const now = options.now ?? new Date()
   const fetchQuote = options.fetchQuote ?? (() => fetchUsdClp())
+  const envMax = Number(env.FX_MAX_DEVIATION_PERCENT)
+  const maxDeviation = options.maxDeviationPercent ?? (Number.isFinite(envMax) && envMax > 0 ? envMax : 8)
 
   const override = Number(env.FX_USD_CLP_OVERRIDE)
   if (Number.isFinite(override) && override > 0) {
@@ -41,6 +47,13 @@ export const resolveUsdClp = async (
 
   try {
     const quote = await fetchQuote()
+    // Control contra errores de precio: el dólar no se mueve más de unos pocos puntos de un día a otro. Un valor muy
+    // distinto del último guardado es casi seguro un dato malo y pondría mal TODOS los precios en dólares: se descarta
+    // y se sigue con el último guardado. Si el salto es real, fijarlo con FX_USD_CLP_OVERRIDE.
+    const [previous] = await store.listIntcomexFxRates({}, { order: { date: "DESC" }, take: 1 })
+    if (previous && previous.rate > 0 && (Math.abs(quote.rate - previous.rate) / previous.rate) * 100 > maxDeviation) {
+      return { rate: previous.rate, date: previous.date, source: previous.source, stale: true, rejectedRate: quote.rate }
+    }
     // mindicador entrega la fecha del último dato publicado; se guarda bajo la fecha de hoy
     // para no volver a consultar durante el día.
     await store.createIntcomexFxRates({ date: today, rate: quote.rate, source: quote.source })

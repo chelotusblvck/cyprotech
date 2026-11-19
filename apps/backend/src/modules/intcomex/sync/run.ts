@@ -8,7 +8,7 @@ import {
   updateProductsWorkflow,
 } from "@medusajs/medusa/core-flows"
 
-import { loadPricingConfig } from "../../../lib/pricing"
+import { describeHeld, loadPriceGuard, loadPricingConfig, type HeldPrice } from "../../../lib/pricing"
 import { createIntcomexApi, type IntcomexApi } from "../client"
 import { INTCOMEX_MODULE } from "../index"
 import type IntcomexModuleService from "../service"
@@ -29,6 +29,8 @@ export type SyncOptions = {
   limit?: number
   // Calcula y reporta lo que haría, sin escribir nada.
   dryRun?: boolean
+  // Aplica también los cambios de precio fuera de rango (por defecto quedan retenidos). Solo después de revisarlos.
+  acceptLargeChanges?: boolean
   // Permite inyectar un cliente (pruebas); por defecto se elige según las credenciales.
   api?: IntcomexApi
 }
@@ -73,7 +75,10 @@ const listAllRows = async (service: IntcomexModuleService): Promise<RowSnapshot[
   }
 }
 
-export const buildContext = async (service: IntcomexModuleService): Promise<{ context: SyncContext; fx: ResolvedFx | null }> => {
+export const buildContext = async (
+  service: IntcomexModuleService,
+  options: { acceptLargeChanges?: boolean } = {},
+): Promise<{ context: SyncContext; fx: ResolvedFx | null }> => {
   let fx: ResolvedFx | null = null
   try {
     fx = await resolveUsdClp(service)
@@ -81,8 +86,27 @@ export const buildContext = async (service: IntcomexModuleService): Promise<{ co
     // Sin tipo de cambio solo se pueden procesar costos en CLP; el resto se informa y se salta.
   }
   return {
-    context: { pricing: loadPricingConfig(), usdClp: fx?.rate ?? null, minStock: minStockFromEnv() },
+    context: {
+      pricing: loadPricingConfig(),
+      usdClp: fx?.rate ?? null,
+      minStock: minStockFromEnv(),
+      priceGuard: options.acceptLargeChanges ? undefined : loadPriceGuard(),
+    },
     fx,
+  }
+}
+
+// Lo que se retuvo (cambios de precio fuera de rango o dólar descartado) queda en el estado de la corrida y en el log.
+const reportGuards = (container: MedusaContainer, stats: Stats, held: HeldPrice[], fx: ResolvedFx | null) => {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
+  stats.heldPrices = held.length
+  if (held.length > 0) {
+    stats.heldSample = describeHeld(held)
+    logger.warn(`Intcomex: ${held.length} cambios de precio fuera de rango NO se aplicaron: ${describeHeld(held)}`)
+  }
+  if (fx?.rejectedRate !== undefined) {
+    stats.fxRejected = fx.rejectedRate
+    logger.warn(`Intcomex: se descartó el tipo de cambio ${fx.rejectedRate} por salirse de rango; se usa ${fx.rate} (${fx.date}).`)
   }
 }
 
@@ -344,7 +368,7 @@ export const syncCatalog = async (container: MedusaContainer, options: SyncOptio
 
   return withRunLog(service, "catalog", api.isMock, async () => {
     const catalog = await api.getCatalog()
-    const { context, fx } = await buildContext(service)
+    const { context, fx } = await buildContext(service, options)
     const rows = await listAllRows(service)
     const plan = planCatalogSync(catalog, rows, context, { limit: options.limit })
 
@@ -357,6 +381,7 @@ export const syncCatalog = async (container: MedusaContainer, options: SyncOptio
       fxStale: fx?.stale ?? false,
       dryRun: Boolean(options.dryRun),
     }
+    reportGuards(container, stats, plan.held, fx)
     if (options.dryRun) {
       return stats
     }
@@ -381,7 +406,7 @@ const syncFeed = async (
   assertSyncAllowed(api)
 
   return withRunLog(service, kind, api.isMock, async () => {
-    const { context, fx } = await buildContext(service)
+    const { context, fx } = await buildContext(service, options)
     const rows = await listAllRows(service)
     const bySku = new Map(rows.filter((row) => row.active).map((row) => [row.sku, row]))
 
@@ -395,6 +420,7 @@ const syncFeed = async (
         : (await api.getInventory()).map((entry) => ({ sku: entry.Sku, stock: entry.InStock ?? 0 }))
 
     const changes: RowChange[] = []
+    const held: HeldPrice[] = []
     let unknown = 0
     for (const entry of incoming) {
       const row = bySku.get(entry.sku)
@@ -402,7 +428,7 @@ const syncFeed = async (
         unknown++
         continue
       }
-      const change = planRowChange(row, entry, context, { reprice: kind === "prices" })
+      const change = planRowChange(row, entry, context, { reprice: kind === "prices", onHeld: (item) => held.push(item) })
       if (change) {
         changes.push(change)
       }
@@ -417,6 +443,7 @@ const syncFeed = async (
       fxStale: fx?.stale ?? false,
       dryRun: Boolean(options.dryRun),
     }
+    reportGuards(container, stats, held, fx)
     if (options.dryRun || limited.length === 0) {
       return stats
     }

@@ -11,6 +11,8 @@ const bodySchema = z.object({
   kind: z.enum(["catalog", "prices", "inventory"]),
   limit: z.number().int().positive().optional(),
   dryRun: z.boolean().optional(),
+  // Aplica también los cambios de precio fuera de rango que la corrida anterior retuvo. Solo después de revisarlos.
+  acceptLargeChanges: z.boolean().optional(),
 })
 
 // Lanza una sincronización a mano. Las corridas reales se ejecutan en segundo plano porque el
@@ -22,7 +24,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     res.status(400).json({ message: "Parámetros inválidos", issues: parsed.error.issues })
     return
   }
-  const { kind, limit, dryRun } = parsed.data
+  const { kind, limit, dryRun, acceptLargeChanges } = parsed.data
   const service: IntcomexModuleService = req.scope.resolve(INTCOMEX_MODULE)
 
   try {
@@ -38,12 +40,12 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
 
   if (dryRun) {
-    const { stats } = await runSync(kind, req.scope, { limit, dryRun })
+    const { stats } = await runSync(kind, req.scope, { limit, dryRun, acceptLargeChanges })
     res.json({ started: false, stats })
     return
   }
 
-  runSync(kind, req.scope, { limit }).catch((error) => {
+  runSync(kind, req.scope, { limit, acceptLargeChanges }).catch((error) => {
     req.scope
       .resolve(ContainerRegistrationKeys.LOGGER)
       .error(`Sincronización ${kind} falló: ${(error as Error).message}`)

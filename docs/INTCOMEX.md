@@ -87,6 +87,26 @@ el último valor guardado y el estado lo marca como desactualizado. `FX_USD_CLP_
 Reglas de actualización: un aumento de costo se aplica siempre; una baja solo si es 0,5% o más (evita cambiar
 precios por centavos). El feed de inventario nunca toca precios.
 
+### Controles contra errores de precio
+
+En vez de depender de una cláusula de anulación, un dato malo (un costo con un cero de menos, un dólar de otro orden de
+magnitud) **no llega a la tienda**:
+
+| Control | Qué hace | Cómo se cambia |
+| --- | --- | --- |
+| Variación de precio por corrida | Un cambio de precio que baja `PRICING_MAX_DROP_PERCENT` (30) o más, o sube `PRICING_MAX_RISE_PERCENT` (60) o más respecto del precio publicado **no se aplica**: queda retenido. El stock y el costo guardado sí se actualizan. | Variables `PRICING_MAX_DROP_PERCENT` y `PRICING_MAX_RISE_PERCENT` |
+| Tipo de cambio | Si el valor nuevo del dólar difiere más de `FX_MAX_DEVIATION_PERCENT` (8) del último guardado, se descarta y se sigue con el guardado (queda como desactualizado). El primer valor nunca se descarta. | `FX_MAX_DEVIATION_PERCENT`; un salto real se fija con `FX_USD_CLP_OVERRIDE` |
+| Margen mínimo | El precio nunca baja del piso que deja `PRICING_MIN_NET_MARGIN_PERCENT` después de la comisión de Flow. | Ya existía |
+| Al pagar | Antes de cobrar se consulta el costo actual en Intcomex; si subió más de 2 %, el carrito se rechaza. | Ya existía |
+
+**Dónde se ve lo retenido:** en `stats` de la corrida (`GET /admin/intcomex/status`): `heldPrices` (cuántos), `heldSample` (los
+primeros 10, con el precio publicado, el nuevo y la variación) y `fxRejected` (el dólar descartado). También sale como
+advertencia en el log del servidor. Mientras no se revise, el precio publicado se mantiene y el producto se vuelve a
+retener en cada corrida.
+
+**Cómo aplicar lo retenido después de revisarlo:** `POST /admin/intcomex/sync` con `{"kind":"prices","acceptLargeChanges":true}`
+(o `"catalog"`). Esa corrida no controla la variación: usarla solo con el cambio ya revisado, idealmente primero con `"dryRun":true`.
+
 ## Reglas de publicación
 
 Un producto se publica si tiene categoría reconocida y stock igual o mayor a `INTCOMEX_MIN_STOCK` (3).

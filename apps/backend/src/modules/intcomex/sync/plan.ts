@@ -1,4 +1,4 @@
-import { calculatePrice, normalizeCurrency, type PricingConfig } from "../../../lib/pricing"
+import { calculatePrice, checkPriceChange, normalizeCurrency, type HeldPrice, type PriceGuardConfig, type PricingConfig } from "../../../lib/pricing"
 import { DETAIL_CATEGORY, mapCategory, categoryPath } from "../category-map"
 import type { IwsProduct } from "../client/types"
 
@@ -8,6 +8,9 @@ export type SyncContext = {
   usdClp: number | null
   // Stock mínimo para publicar un producto. Bajo ese nivel se oculta.
   minStock: number
+  // Límites de variación de precio por corrida (lib/pricing/guard.ts). Sin esto no se controla (pruebas, o una corrida
+  // manual con acceptLargeChanges después de revisar lo retenido).
+  priceGuard?: PriceGuardConfig
 }
 
 // Lo que se sabe de un producto ya sincronizado (fila de intcomex_product).
@@ -85,7 +88,7 @@ export const planRowChange = (
   row: RowSnapshot,
   incoming: Incoming,
   context: SyncContext,
-  options: { reprice?: boolean } = {},
+  options: { reprice?: boolean; onHeld?: (held: HeldPrice) => void } = {},
 ): RowChange | null => {
   const change: RowChange = { rowId: row.id, sku: row.sku, patch: {} }
 
@@ -119,9 +122,15 @@ export const planRowChange = (
   if (options.reprice !== false && canPrice && costNet > 0) {
     const price = priceFor({ costNet, currency }, context).publicPrice
     if (shouldUpdatePrice(row.public_price, price)) {
-      change.patch.public_price = price
-      if (row.medusa_variant_id) {
-        change.variantPrice = { variantId: row.medusa_variant_id, amount: price }
+      // Un salto fuera de rango no se publica: queda retenido hasta que alguien lo revise (lib/pricing/guard.ts).
+      const held = context.priceGuard ? checkPriceChange(row.sku, row.public_price, price, context.priceGuard) : null
+      if (held) {
+        options.onHeld?.(held)
+      } else {
+        change.patch.public_price = price
+        if (row.medusa_variant_id) {
+          change.variantPrice = { variantId: row.medusa_variant_id, amount: price }
+        }
       }
     }
   }
@@ -156,6 +165,8 @@ export type CatalogPlan = {
   changes: RowChange[]
   // Filas que Intcomex ya no lista.
   toDeactivate: RowSnapshot[]
+  // Cambios de precio fuera de rango que no se aplicaron.
+  held: HeldPrice[]
   stats: {
     fetched: number
     skippedNotPhysical: number
@@ -190,6 +201,7 @@ export const planCatalogSync = (
   const seen = new Set<string>()
   const toCreate: NewProductPlan[] = []
   const changes: RowChange[] = []
+  const held: HeldPrice[] = []
 
   let processed = 0
   for (const product of catalog) {
@@ -244,7 +256,9 @@ export const planCatalogSync = (
       continue
     }
 
-    const change = planRowChange(existing, { sku: product.Sku, costNet, currency, stock }, context)
+    const change = planRowChange(existing, { sku: product.Sku, costNet, currency, stock }, context, {
+      onHeld: (entry) => held.push(entry),
+    })
     if (change) {
       changes.push(change)
     } else {
@@ -257,5 +271,5 @@ export const planCatalogSync = (
       ? []
       : rows.filter((row) => row.active && row.source !== "manual" && !seen.has(row.sku))
 
-  return { toCreate, changes, toDeactivate, stats }
+  return { toCreate, changes, toDeactivate, held, stats }
 }
